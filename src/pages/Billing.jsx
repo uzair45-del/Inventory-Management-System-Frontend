@@ -243,20 +243,26 @@ const Billing = () => {
                         </div>
                     </div>
 
+                    {/* Company Name - shown for Original and Udhaar bills */}
+                    {billType !== 'quotation' && (
+                        <div className="form-grid">
+                            <div className="input-group">
+                                <label>Company Name</label>
+                                <input
+                                    type="text"
+                                    className="input-field"
+                                    placeholder="e.g. ABC Construction Ltd (optional)"
+                                    value={companyName}
+                                    onChange={(e) => setCompanyName(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Udhaar-specific fields */}
                     {billType === 'udhaar' && (
                         <>
                             <div className="form-grid">
-                                <div className="input-group">
-                                    <label>Company Name</label>
-                                    <input
-                                        type="text"
-                                        className="input-field"
-                                        placeholder="e.g. ABC Construction Ltd"
-                                        value={companyName}
-                                        onChange={(e) => setCompanyName(e.target.value)}
-                                    />
-                                </div>
                                 <div className="input-group">
                                     <label>Customer Phone *</label>
                                     <input
@@ -268,8 +274,6 @@ const Billing = () => {
                                         required
                                     />
                                 </div>
-                            </div>
-                            <div className="form-grid">
                                 <div className="input-group">
                                     <label>Paid Amount (Rs)</label>
                                     <input
@@ -468,7 +472,7 @@ const Billing = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

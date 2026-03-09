@@ -327,6 +327,10 @@ const Suppliers = () => {
         (supplier.company_name && supplier.company_name.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
+    // Build a quick product id → name lookup to use as fallback
+    const productMap = {};
+    productsList.forEach(p => { productMap[p.id] = p.name; });
+
     const flattenedData = [];
     filteredSuppliers.forEach(supplier => {
         if (supplier.supplier_transactions && supplier.supplier_transactions.length > 0) {
@@ -422,7 +426,7 @@ const Suppliers = () => {
 
                                             {txn ? (
                                                 <>
-                                                    <td><span className="font-medium">{txn.products?.name || `Product ID: ${txn.product_id}`}</span></td>
+                                                    <td><span className="font-medium">{txn.products?.name || productMap[txn.product_id] || `Product #${txn.product_id}`}</span></td>
                                                     <td>{txn.quantity}</td>
                                                     <td>Rs. {txn.total_amount}</td>
                                                     <td>Rs. {txn.paid_amount}</td>
