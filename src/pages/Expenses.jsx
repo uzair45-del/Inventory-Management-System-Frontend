@@ -229,22 +229,20 @@ const Expenses = () => {
                                     <label>Date</label>
                                     <input
                                         type="date"
-                                        className="form-input"
+                                        className="input-field"
                                         value={currentExpense.date}
                                         onChange={e => setCurrentExpense({ ...currentExpense, date: e.target.value })}
                                         required
-                                        style={{ background: 'var(--bg-primary)' }}
                                     />
                                 </div>
 
-                                <div className="form-group">
+                                <div className="input-group">
                                     <label>Category</label>
                                     <select
-                                        className="form-input minimal-select"
+                                        className="input-field minimal-select"
                                         value={currentExpense.category}
                                         onChange={e => setCurrentExpense({ ...currentExpense, category: e.target.value })}
                                         required
-                                        style={{ background: 'var(--bg-primary)' }}
                                     >
                                         <option value="Petrol">Petrol</option>
                                         <option value="Electric Bill">Electric Bill</option>
