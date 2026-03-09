@@ -8,6 +8,8 @@ import Buyers from './pages/Buyers';
 import Suppliers from './pages/Suppliers';
 import Billing from './pages/Billing';
 import RecentSales from './pages/RecentSales';
+import Expenses from './pages/Expenses';
+import MonthlyReport from './pages/MonthlyReport';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -27,6 +29,8 @@ function App() {
             <Route path="suppliers" element={<Suppliers />} />
             <Route path="billing" element={<Billing />} />
             <Route path="sales" element={<RecentSales />} />
+            <Route path="expenses" element={<Expenses />} />
+            <Route path="monthly-report" element={<MonthlyReport />} />
           </Route>
         </Route>
       </Routes>
