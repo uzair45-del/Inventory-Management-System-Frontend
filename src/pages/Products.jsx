@@ -167,6 +167,14 @@ const Products = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Auto-derived: total amount to pay supplier = purchase_rate × total_quantity
+    const totalToPaySupplier = (() => {
+        const rate = parseFloat(formData.purchase_rate);
+        const qty = parseInt(formData.total_quantity, 10);
+        if (!isNaN(rate) && rate > 0 && !isNaN(qty) && qty > 0) return rate * qty;
+        return null;
+    })();
+
     const handleFormSubmit = async (e) => {
         e.preventDefault();
 
@@ -480,20 +488,28 @@ const Products = () => {
                                 </div>
                             </div>
                             {modalMode === 'add' && (
-                                <div className="form-grid">
-                                    <div className="input-group">
-                                        <label>Paid Amount (Rs) <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(0 = full udhaar from supplier)</span></label>
-                                        <input
-                                            type="number"
-                                            className="input-field"
-                                            name="paid_amount"
-                                            value={formData.paid_amount}
-                                            onChange={handleFormChange}
-                                            min="0"
-                                            placeholder="How much paid now? (0 = udhaar)"
-                                        />
+                                <>
+                                    {totalToPaySupplier !== null && (
+                                        <div style={{ padding: '10px 14px', borderRadius: '8px', backgroundColor: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>💳 Total to Pay Supplier</span>
+                                            <span style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '1rem' }}>Rs. {totalToPaySupplier.toLocaleString()}</span>
+                                        </div>
+                                    )}
+                                    <div className="form-grid">
+                                        <div className="input-group">
+                                            <label>Paid Amount (Rs) <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(0 = full udhaar from supplier)</span></label>
+                                            <input
+                                                type="number"
+                                                className="input-field"
+                                                name="paid_amount"
+                                                value={formData.paid_amount}
+                                                onChange={handleFormChange}
+                                                min="0"
+                                                placeholder="How much paid now? (0 = udhaar)"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
+                                </>
                             )}
                             <div className="form-grid">
                                 <div className="input-group">

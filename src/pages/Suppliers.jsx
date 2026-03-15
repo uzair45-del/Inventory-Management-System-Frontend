@@ -394,6 +394,7 @@ const Suppliers = () => {
                                     <th>Contact</th>
                                     <th>Product</th>
                                     <th>Qty</th>
+                                    <th>Purchase Rate</th>
                                     <th>Total Amt</th>
                                     <th>Paid Amt</th>
                                     <th>Remaining (Payable)</th>
@@ -428,6 +429,11 @@ const Suppliers = () => {
                                                 <>
                                                     <td><span className="font-medium">{txn.products?.name || productMap[txn.product_id] || `Product #${txn.product_id}`}</span></td>
                                                     <td>{txn.quantity}</td>
+                                                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                                        {txn.quantity && txn.total_amount
+                                                            ? `Rs. ${(Number(txn.total_amount) / Number(txn.quantity)).toFixed(0)}`
+                                                            : '-'}
+                                                    </td>
                                                     <td>Rs. {txn.total_amount}</td>
                                                     <td>Rs. {txn.paid_amount}</td>
                                                     <td>
@@ -437,7 +443,7 @@ const Suppliers = () => {
                                                     </td>
                                                 </>
                                             ) : (
-                                                <td colSpan="5" className="text-secondary text-center italic">No transactions</td>
+                                                <td colSpan="6" className="text-secondary text-center italic">No transactions</td>
                                             )}
 
                                             <td>
