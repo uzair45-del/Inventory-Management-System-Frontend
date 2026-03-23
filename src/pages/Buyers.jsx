@@ -30,7 +30,8 @@ const Buyers = () => {
         purchase_date: new Date().toISOString().split('T')[0],
         txn_id: null,
         add_payment: '',
-        remaining_amount: 0
+        remaining_amount: 0,
+        payment_date: new Date().toISOString().split('T')[0]
     });
 
     useEffect(() => {
@@ -112,7 +113,8 @@ const Buyers = () => {
             purchase_date: new Date().toISOString().split('T')[0],
             txn_id: null,
             add_payment: '',
-            remaining_amount: 0
+            remaining_amount: 0,
+            payment_date: new Date().toISOString().split('T')[0]
         });
         setIsModalOpen(true);
     };
@@ -128,7 +130,8 @@ const Buyers = () => {
             company_name: row.company_name || '',
             txn_id: txn ? txn.id : null,
             add_payment: '',
-            remaining_amount: txn ? (Number(txn.total_amount || 0) - Number(txn.paid_amount || 0)) : 0
+            remaining_amount: txn ? (Number(txn.total_amount || 0) - Number(txn.paid_amount || 0)) : 0,
+            payment_date: new Date().toISOString().split('T')[0]
         });
         setIsModalOpen(true);
     };
@@ -197,7 +200,8 @@ const Buyers = () => {
                     }
                     // Update the transaction parallel to buyer update
                     await axios.put(`/api/sales/${formData.txn_id}`, {
-                        add_payment: Number(formData.add_payment)
+                        add_payment: Number(formData.add_payment),
+                        date: formData.payment_date
                     }, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
@@ -534,16 +538,27 @@ const Buyers = () => {
                                         </div>
                                         <div className="input-group">
                                             <label>Add New Payment (Rs)</label>
-                                            <input
-                                                type="number"
-                                                className="input-field"
-                                                name="add_payment"
-                                                value={formData.add_payment}
-                                                onChange={handleFormChange}
-                                                min="0"
-                                                max={formData.remaining_amount}
-                                                placeholder="Amount to pay..."
-                                            />
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <input
+                                                    type="number"
+                                                    className="input-field"
+                                                    style={{ flex: 1 }}
+                                                    name="add_payment"
+                                                    value={formData.add_payment}
+                                                    onChange={handleFormChange}
+                                                    min="0"
+                                                    max={formData.remaining_amount}
+                                                    placeholder="Amount to pay..."
+                                                />
+                                                <input
+                                                    type="date"
+                                                    className="input-field"
+                                                    style={{ width: '140px' }}
+                                                    name="payment_date"
+                                                    value={formData.payment_date}
+                                                    onChange={handleFormChange}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </>

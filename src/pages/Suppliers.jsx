@@ -35,7 +35,8 @@ const Suppliers = () => {
         remaining_amount: 0,
         txn_paid_amount: 0,
         txn_total_amount: 0,
-        unit_price: ''
+        unit_price: '',
+        payment_date: new Date().toISOString().split('T')[0]
     });
 
     useEffect(() => {
@@ -122,7 +123,8 @@ const Suppliers = () => {
             remaining_amount: 0,
             txn_paid_amount: 0,
             txn_total_amount: 0,
-            unit_price: ''
+            unit_price: '',
+            payment_date: new Date().toISOString().split('T')[0]
         });
         setIsModalOpen(true);
     };
@@ -159,6 +161,7 @@ const Suppliers = () => {
             remaining_amount: txn ? (Number(txn.total_amount || 0) - Number(txn.paid_amount || 0)) : 0,
             txn_paid_amount: txn ? (Number(txn.paid_amount || 0)) : 0,
             txn_total_amount: txn ? (Number(txn.total_amount || 0)) : 0,
+            payment_date: new Date().toISOString().split('T')[0]
         });
         setIsModalOpen(true);
     };
@@ -231,6 +234,7 @@ const Suppliers = () => {
                     return;
                 }
                 payload.payment_amount = payAmt;
+                payload.date = formData.payment_date;
             }
 
             const finalProductName = formData.product_name || productSearch;
@@ -304,6 +308,7 @@ const Suppliers = () => {
                     }
 
                     if (Object.keys(updatePayload).length > 0) {
+                        updatePayload.date = formData.payment_date;
                         await axios.put(`/api/purchases/${formData.txn_id}`, updatePayload, {
                             headers: { Authorization: `Bearer ${token}` }
                         });
@@ -552,14 +557,25 @@ const Suppliers = () => {
                                     <div className="input-group">
                                         <label style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>Make Payment (Rs) <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(max: Rs. {formData.txn_due})</span></label>
                                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Pay off the oldest outstanding bills alphabetically.</p>
-                                        <input
-                                            type="number"
-                                            className="input-field"
-                                            name="payment_amount"
-                                            value={formData.payment_amount}
-                                            onChange={handleFormChange}
-                                            placeholder="Enter generic payment..."
-                                        />
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <input
+                                                type="number"
+                                                className="input-field"
+                                                style={{ flex: 1 }}
+                                                name="payment_amount"
+                                                value={formData.payment_amount}
+                                                onChange={handleFormChange}
+                                                placeholder="Enter generic payment..."
+                                            />
+                                            <input
+                                                type="date"
+                                                className="input-field"
+                                                style={{ width: '140px' }}
+                                                name="payment_date"
+                                                value={formData.payment_date}
+                                                onChange={handleFormChange}
+                                            />
+                                        </div>
                                     </div>
                                 </>
                             )}
@@ -702,16 +718,27 @@ const Suppliers = () => {
                                     <div className="form-grid">
                                         <div className="input-group">
                                             <label>Add New Payment (Rs) <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(max: {formData.remaining_amount})</span></label>
-                                            <input
-                                                type="number"
-                                                className="input-field"
-                                                name="add_payment"
-                                                value={formData.add_payment}
-                                                onChange={handleFormChange}
-                                                min="0"
-                                                max={formData.remaining_amount}
-                                                placeholder="Amount to pay..."
-                                            />
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <input
+                                                    type="number"
+                                                    className="input-field"
+                                                    style={{ flex: 1 }}
+                                                    name="add_payment"
+                                                    value={formData.add_payment}
+                                                    onChange={handleFormChange}
+                                                    min="0"
+                                                    max={formData.remaining_amount}
+                                                    placeholder="Amount to pay..."
+                                                />
+                                                <input
+                                                    type="date"
+                                                    className="input-field"
+                                                    style={{ width: '140px' }}
+                                                    name="payment_date"
+                                                    value={formData.payment_date}
+                                                    onChange={handleFormChange}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </>

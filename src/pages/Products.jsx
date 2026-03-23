@@ -215,6 +215,7 @@ const Products = () => {
                 paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : 0,
                 total_quantity: parseInt(formData.total_quantity, 10),
                 add_quantity: formData.add_quantity ? parseInt(formData.add_quantity, 10) : 0,
+                quantity_unit: formData.quantity_unit
             };
 
             if (modalMode === 'add') {

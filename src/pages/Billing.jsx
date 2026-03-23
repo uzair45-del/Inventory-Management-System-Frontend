@@ -20,6 +20,11 @@ const Billing = () => {
     const [buyerPhone, setBuyerPhone] = useState('');
     const [paidAmount, setPaidAmount] = useState('');
 
+    const formatProductId = (id) => {
+        if (!id) return '';
+        return `AB${String(id).padStart(2, '0')}`;
+    };
+
     useEffect(() => {
         fetchProducts();
         fetchCustomers();
@@ -334,7 +339,7 @@ const Billing = () => {
                                 <option value="">Select a product...</option>
                                 {products.filter(p => billType === 'quotation' || (p.remaining_quantity && p.remaining_quantity >= 1)).map(p => (
                                     <option key={p.id} value={p.id}>
-                                        [{p.category || 'NA'}] {p.name} - Rs. {p.price} {billType !== 'quotation' ? `(Stock: ${p.remaining_quantity})` : ''}
+                                        [{formatProductId(p.id)}] {p.name} - Rs. {p.price} {p.quantity_unit ? `(${p.quantity_unit})` : ''} {billType !== 'quotation' ? `(Stock: ${p.remaining_quantity})` : ''}
                                     </option>
                                 ))}
                             </select>
@@ -393,7 +398,10 @@ const Billing = () => {
                                 <div key={item.id} className="cart-item animate-fade-in">
                                     <div className="item-details">
                                         <h4>{item.name}</h4>
-                                        <p>Rs. {item.price} x {item.quantity}</p>
+                                        <p>
+                                            <span style={{ fontSize: '0.85em', color: 'var(--accent-primary)', marginRight: '6px' }}>{formatProductId(item.id)}</span>
+                                            Rs. {item.price} x {item.quantity} {item.quantity_unit ? `(${item.quantity_unit})` : ''}
+                                        </p>
                                     </div>
                                     <div className="item-total">
                                         <span>Rs. {(item.price * item.quantity).toLocaleString()}</span>
@@ -447,8 +455,11 @@ const Billing = () => {
                         </div>
                         {cart.map(item => (
                             <div key={item.id} className="receipt-table-row">
-                                <span className="item-name-col">{item.name}</span>
-                                <span>{item.quantity}</span>
+                                <span className="item-name-col">
+                                    {item.name}
+                                    <div style={{ fontSize: '0.7em', color: '#666', marginTop: '2px' }}>{formatProductId(item.id)}</div>
+                                </span>
+                                <span>{item.quantity} {item.quantity_unit ? `\n(${item.quantity_unit})` : ''}</span>
                                 <span>Rs. {(item.price * item.quantity).toLocaleString()}</span>
                             </div>
                         ))}

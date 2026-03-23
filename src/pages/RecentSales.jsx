@@ -12,6 +12,11 @@ const TIME_FILTERS = [
     { key: '5y', label: 'Last 5 Years' },
 ];
 
+const formatProductId = (id) => {
+    if (!id) return '';
+    return `AB${String(id).padStart(2, '0')}`;
+};
+
 const getDateThreshold = (key) => {
     const now = new Date();
     switch (key) {
@@ -182,14 +187,17 @@ const RecentSales = () => {
                                         <td>{idx + 1}</td>
                                         <td style={{ fontFamily: 'monospace', color: 'var(--accent-primary)', fontWeight: 600 }}>#{sale.id}</td>
                                         <td>{sale.purchase_date ? new Date(sale.purchase_date).toLocaleDateString() : '-'}</td>
-                                        <td className="font-medium">{sale.products?.name || '-'}</td>
+                                        <td>
+                                            <div className="font-medium">{sale.products?.name || '-'}</div>
+                                            <div style={{ fontSize: '0.7em', color: '#666', marginTop: '2px' }}>{formatProductId(sale.product_id)}</div>
+                                        </td>
                                         <td>Rs. {Number(sale.products?.price || 0).toLocaleString()}</td>
                                         <td>{sale.products?.purchased_from || '-'}</td>
                                         <td>
                                             <div>{sale.buyers?.name || 'Cash Sale'}</div>
                                             {sale.buyers?.phone && <div style={{ fontSize: '0.8em', color: '#888', marginTop: '2px' }}>{sale.buyers.phone}</div>}
                                         </td>
-                                        <td>{sale.quantity}</td>
+                                        <td>{sale.quantity} {sale.products?.quantity_unit ? `\n(${sale.products.quantity_unit})` : ''}</td>
                                         <td>Rs. {Number(sale.total_amount).toLocaleString()}</td>
                                         <td style={{ color: '#22c55e' }}>Rs. {Number(sale.paid_amount).toLocaleString()}</td>
                                         <td style={{ color: pending > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>
