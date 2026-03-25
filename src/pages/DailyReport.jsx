@@ -118,48 +118,52 @@ const DailyReport = () => {
     const totalUdhaarToSuppliers = supplierTotalAmount - supplierTotalPaid;
 
     return (
-        <div className="page-container fade-in" style={{ display: 'flex', gap: '24px' }}>
-            {/* Left Panel: Controls */}
-            <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="report-container page-container fade-in" style={{ paddingBottom: '40px' }}>
+            <header className="page-header" style={{ marginBottom: '30px' }}>
                 <div>
                     <h1 className="page-title">Daily Report</h1>
                     <p className="page-subtitle">Generate a full summary for any given day</p>
                 </div>
-
-                <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                        <Filter size={18} color="var(--accent-primary)" />
-                        <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Select Date</h3>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    {/* Modern Glass Date Picker */}
+                    <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', padding: '8px 16px', borderRadius: '12px', gap: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Select Date</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <input 
+                                    type="date"
+                                    className="input-field minimal-select"
+                                    value={reportDate}
+                                    onChange={(e) => setReportDate(e.target.value)}
+                                    style={{ padding: '4px 8px', minWidth: '130px', background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: '600', outline: 'none' }}
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <input 
-                        type="date"
-                        className="input-field"
-                        value={reportDate}
-                        onChange={(e) => setReportDate(e.target.value)}
-                        style={{ width: '100%', marginBottom: '24px' }}
-                    />
                     
+                    {/* PDF Download Button */}
                     <button 
                         className="btn-primary" 
                         onClick={handleDownloadPdf}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '12px' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px', borderRadius: '12px' }}
                         disabled={loading}
                     >
-                        <Download size={20} />
-                        <span>Download PDF Report</span>
+                        <Download size={18} />
+                        <span>Download PDF</span>
                     </button>
                 </div>
-            </div>
+            </header>
 
-            {/* Right Panel: The Report Preview Map */}
-            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '12px' }}>
+            <div>
                 {loading ? (
-                    <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>Loading records...</div>
+                    <div className="page-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+                        <div className="text-center" style={{ color: 'var(--text-muted)' }}>Loading records...</div>
+                    </div>
                 ) : (
                     <div 
                         ref={reportRef} 
-                        className="glass-panel report-container" 
-                        style={{ padding: '40px', borderRadius: '8px', minHeight: '800px', background: 'var(--bg-primary)' }}
+                        style={{ padding: '30px', borderRadius: '16px', minHeight: '800px', background: 'var(--bg-primary)', border: '1px solid var(--glass-border)' }}
                     >
                         {/* Report Header */}
                         <div style={{ textAlign: 'center', marginBottom: '40px', borderBottom: '2px solid var(--border-color)', paddingBottom: '20px' }}>
