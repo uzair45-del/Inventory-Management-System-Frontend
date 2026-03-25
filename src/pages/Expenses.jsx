@@ -108,7 +108,7 @@ const Expenses = () => {
                 </button>
             </header>
 
-            <div className="filters-section glass-panel">
+            <div className="filters-section glass-panel" style={{ position: 'relative', zIndex: 10 }}>
                 <div className="search-box">
                     <Search className="search-icon" size={20} />
                     <input

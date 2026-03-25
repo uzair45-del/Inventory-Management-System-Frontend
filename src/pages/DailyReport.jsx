@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Download, FileText, Package, Truck, Target, CreditCard, Filter } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import './Expenses.css'; // borrowing standard page styles
+import './Reports.css'; // Premium analytics styling
 
 const DailyReport = () => {
     const defaultDate = new Date().toISOString().split('T')[0];
@@ -202,111 +203,123 @@ const DailyReport = () => {
                         </div>
 
                         {/* Top Metrics Grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '40px' }}>
-                            <div style={{ padding: '20px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '12px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                                    <Target size={20} color="#38bdf8" />
-                                    <h3 style={{ fontSize: '1.1rem', color: '#38bdf8', margin: 0 }}>Total Sales Overview</h3>
+                        <div className="report-hero-stats">
+                            <div className="stat-card-premium blue">
+                                <div className="stat-header">
+                                    <div className="stat-icon-wrapper">
+                                        <Target size={24} />
+                                    </div>
+                                    <h3 className="stat-title">Total Sales Overview</h3>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <span style={{ color: 'inherit' }}>Total Selling Amount:</span>
-                                    <strong style={{ color: 'var(--text-primary)' }}>Rs. {totalSalesAmount.toLocaleString()}</strong>
+                                <div className="stat-row">
+                                    <span>Total Selling Amount:</span>
+                                    <span className="stat-value">Rs. {totalSalesAmount.toLocaleString()}</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <span style={{ color: 'inherit' }}>Cash Received:</span>
-                                    <strong style={{ color: 'var(--success)' }}>Rs. {totalCashPaid.toLocaleString()}</strong>
+                                <div className="stat-row">
+                                    <span>Cash Received:</span>
+                                    <span className="stat-value" style={{ color: 'var(--success)' }}>Rs. {totalCashPaid.toLocaleString()}</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed var(--border-color)', paddingTop: '8px' }}>
-                                    <span style={{ color: 'inherit' }}>Given on Udhaar:</span>
-                                    <strong style={{ color: totalUdhaarGiven > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>Rs. {totalUdhaarGiven.toLocaleString()}</strong>
-                                </div>
-                            </div>
-
-                            <div style={{ padding: '20px', background: 'rgba(168, 85, 247, 0.1)', border: '1px solid rgba(168, 85, 247, 0.2)', borderRadius: '12px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                                    <Truck size={20} color="#a855f7" />
-                                    <h3 style={{ fontSize: '1.1rem', color: '#a855f7', margin: 0 }}>Supplier Payables (Today)</h3>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <span style={{ color: 'inherit' }}>Total Bill (Purchases):</span>
-                                    <strong style={{ color: 'var(--text-primary)' }}>Rs. {supplierTotalAmount.toLocaleString()}</strong>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <span style={{ color: 'inherit' }}>Cash Paid:</span>
-                                    <strong style={{ color: 'var(--success)' }}>Rs. {supplierTotalPaid.toLocaleString()}</strong>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed var(--border-color)', paddingTop: '8px' }}>
-                                    <span style={{ color: 'inherit' }}>Owed to Suppliers:</span>
-                                    <strong style={{ color: totalUdhaarToSuppliers > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>Rs. {totalUdhaarToSuppliers.toLocaleString()}</strong>
+                                <div className="stat-row highlight">
+                                    <span>Given on Udhaar:</span>
+                                    <span className="stat-value" style={{ color: totalUdhaarGiven > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>Rs. {totalUdhaarGiven.toLocaleString()}</span>
                                 </div>
                             </div>
 
-                            <div style={{ padding: '20px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '12px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                                    <Package size={20} color="#ef4444" />
-                                    <h3 style={{ fontSize: '1.1rem', color: '#ef4444', margin: 0 }}>Returns Overview</h3>
+                            <div className="stat-card-premium purple">
+                                <div className="stat-header">
+                                    <div className="stat-icon-wrapper">
+                                        <Truck size={24} />
+                                    </div>
+                                    <h3 className="stat-title">Supplier Payables (Today)</h3>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <span style={{ color: 'inherit' }}>Total Returns Value:</span>
-                                    <strong style={{ color: 'var(--text-primary)' }}>Rs. {totalReturnsAmount.toLocaleString()}</strong>
+                                <div className="stat-row">
+                                    <span>Total Bill (Purchases):</span>
+                                    <span className="stat-value">Rs. {supplierTotalAmount.toLocaleString()}</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <span style={{ color: 'inherit' }}>Total Items Returned:</span>
-                                    <strong style={{ color: 'var(--text-primary)' }}>{totalReturnsQty}</strong>
+                                <div className="stat-row">
+                                    <span>Cash Paid:</span>
+                                    <span className="stat-value" style={{ color: 'var(--success)' }}>Rs. {supplierTotalPaid.toLocaleString()}</span>
+                                </div>
+                                <div className="stat-row highlight">
+                                    <span>Owed to Suppliers:</span>
+                                    <span className="stat-value" style={{ color: totalUdhaarToSuppliers > 0 ? 'var(--danger)' : 'var(--text-primary)' }}>Rs. {totalUdhaarToSuppliers.toLocaleString()}</span>
+                                </div>
+                            </div>
+
+                            <div className="stat-card-premium red">
+                                <div className="stat-header">
+                                    <div className="stat-icon-wrapper">
+                                        <Package size={24} />
+                                    </div>
+                                    <h3 className="stat-title">Returns Overview</h3>
+                                </div>
+                                <div className="stat-row">
+                                    <span>Total Returns Value:</span>
+                                    <span className="stat-value">Rs. {totalReturnsAmount.toLocaleString()}</span>
+                                </div>
+                                <div className="stat-row highlight">
+                                    <span>Total Items Returned:</span>
+                                    <span className="stat-value">{totalReturnsQty}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Inventory & Customers Context */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '40px' }}>
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px' }}>
-                                    <Package size={20} color="var(--accent-primary)" />
-                                    <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', margin: 0 }}>New Products ({productsToday.length})</h3>
+                        <div className="report-hero-stats" style={{ marginBottom: '40px' }}>
+                            <div className="premium-list-container">
+                                <div className="premium-list-header">
+                                    <div className="stat-icon-wrapper" style={{ width: 40, height: 40, background: 'rgba(56, 189, 248, 0.15)', color: 'var(--accent-primary)', boxShadow: 'none' }}>
+                                        <Package size={20} />
+                                    </div>
+                                    <h3>New Products ({productsToday.length})</h3>
                                 </div>
                                 {productsToday.length === 0 ? (
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No new products.</p>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: '10px 0' }}>No new products added today.</p>
                                 ) : (
-                                    <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-secondary)' }}>
+                                    <ul className="premium-list">
                                         {productsToday.map((p, i) => (
-                                            <li key={i} style={{ marginBottom: '6px' }}>
-                                                <strong style={{ color: 'var(--text-primary)' }}>{p.name}</strong>
+                                            <li key={i} className="premium-list-item">
+                                                <strong>{p.name}</strong>
                                             </li>
                                         ))}
                                     </ul>
                                 )}
                             </div>
                             
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px' }}>
-                                    <Target size={20} color="var(--success)" />
-                                    <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', margin: 0 }}>New Customers ({buyersToday.length})</h3>
+                            <div className="premium-list-container">
+                                <div className="premium-list-header">
+                                    <div className="stat-icon-wrapper" style={{ width: 40, height: 40, background: 'rgba(34, 197, 94, 0.15)', color: 'var(--success)', boxShadow: 'none' }}>
+                                        <Target size={20} />
+                                    </div>
+                                    <h3>New Customers ({buyersToday.length})</h3>
                                 </div>
                                 {buyersToday.length === 0 ? (
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No new customers.</p>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: '10px 0' }}>No new customers today.</p>
                                 ) : (
-                                    <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-secondary)' }}>
+                                    <ul className="premium-list">
                                         {buyersToday.map((b, i) => (
-                                            <li key={i} style={{ marginBottom: '6px' }}>
-                                                <strong style={{ color: 'var(--text-primary)' }}>{b.name}</strong> {b.company_name ? `(${b.company_name})` : ''}
+                                            <li key={i} className="premium-list-item">
+                                                <strong>{b.name}</strong> <span style={{ color: 'var(--text-muted)' }}>{b.company_name ? `(${b.company_name})` : ''}</span>
                                             </li>
                                         ))}
                                     </ul>
                                 )}
                             </div>
 
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px' }}>
-                                    <Truck size={20} color="var(--warning)" />
-                                    <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', margin: 0 }}>New Suppliers ({suppliersToday.length})</h3>
+                            <div className="premium-list-container">
+                                <div className="premium-list-header">
+                                    <div className="stat-icon-wrapper" style={{ width: 40, height: 40, background: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)', boxShadow: 'none' }}>
+                                        <Truck size={20} />
+                                    </div>
+                                    <h3>New Suppliers ({suppliersToday.length})</h3>
                                 </div>
                                 {suppliersToday.length === 0 ? (
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No new suppliers.</p>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: '10px 0' }}>No new suppliers today.</p>
                                 ) : (
-                                    <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-secondary)' }}>
+                                    <ul className="premium-list">
                                         {suppliersToday.map((s, i) => (
-                                            <li key={i} style={{ marginBottom: '6px' }}>
-                                                <strong style={{ color: 'var(--text-primary)' }}>{s.name}</strong> {s.company_name ? `(${s.company_name})` : ''}
+                                            <li key={i} className="premium-list-item">
+                                                <strong>{s.name}</strong> <span style={{ color: 'var(--text-muted)' }}>{s.company_name ? `(${s.company_name})` : ''}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -316,18 +329,22 @@ const DailyReport = () => {
 
                         {/* Returned Goods Section */}
                         {returnsToday.length > 0 && (
-                            <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', marginBottom: '40px', background: 'rgba(239, 68, 68, 0.03)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid rgba(239, 68, 68, 0.2)', paddingBottom: '8px' }}>
-                                    <h3 style={{ fontSize: '1.2rem', color: 'var(--danger)', margin: 0 }}>Goods Returned Today ({returnsToday.length})</h3>
+                            <div className="premium-list-container" style={{ marginBottom: '40px', borderColor: 'rgba(239, 68, 68, 0.3)', background: 'linear-gradient(145deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%)' }}>
+                                <div className="premium-list-header" style={{ borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+                                    <div className="stat-icon-wrapper" style={{ width: 40, height: 40, background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', boxShadow: 'none' }}>
+                                        <Package size={20} />
+                                    </div>
+                                    <h3 style={{ color: 'var(--danger)' }}>Goods Returned Today ({returnsToday.length})</h3>
                                 </div>
-                                <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-secondary)' }}>
+                                <ul className="premium-list">
                                     {returnsToday.map((r, i) => (
-                                        <li key={i} style={{ marginBottom: '8px' }}>
-                                            <strong style={{ color: 'var(--danger)' }}>{r.product_name}</strong> - Qty: {r.quantity} 
-                                            <span style={{ color: 'var(--text-primary)', marginLeft: '8px' }}>
+                                        <li key={i} className="premium-list-item">
+                                            <strong style={{ color: 'var(--danger)' }}>{r.product_name}</strong>
+                                            <span style={{ color: 'var(--text-secondary)' }}>- Qty: {r.quantity}</span>
+                                            <span style={{ color: 'var(--text-primary)', marginLeft: '8px', fontWeight: 600 }}>
                                                 (Refunded: Rs.{Number(r.total_amount).toLocaleString()})
                                             </span>
-                                            {r.buyer_name && <span style={{ marginLeft: '8px', fontStyle: 'italic', fontSize: '0.9rem' }}>from {r.buyer_name}</span>}
+                                            {r.buyer_name && <span style={{ marginLeft: 'auto', fontStyle: 'italic', fontSize: '0.9rem', color: 'var(--text-muted)' }}>from {r.buyer_name}</span>}
                                         </li>
                                     ))}
                                 </ul>
@@ -335,49 +352,62 @@ const DailyReport = () => {
                         )}
 
                         {/* Recent Transactions Table */}
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px' }}>
-                                <CreditCard size={20} color="var(--accent-primary)" />
-                                <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', margin: 0 }}>Detailed Sales Log ({salesToday.length} records)</h3>
+                        <div style={{ marginBottom: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px' }}>
+                                <div className="stat-icon-wrapper" style={{ width: 40, height: 40, background: 'rgba(56, 189, 248, 0.15)', color: 'var(--accent-primary)', boxShadow: 'none' }}>
+                                    <CreditCard size={20} />
+                                </div>
+                                <h3 style={{ fontSize: '1.25rem', color: 'var(--text-primary)', margin: 0, fontWeight: 600 }}>Detailed Sales Log ({salesToday.length} records)</h3>
                             </div>
+                            
                             {salesToday.length === 0 ? (
-                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No sales recorded today.</p>
+                                <div className="premium-list-container" style={{ padding: '40px', textAlign: 'center' }}>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '1rem', margin: 0 }}>No sales recorded today.</p>
+                                </div>
                             ) : (
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left', color: 'var(--text-muted)' }}>
-                                            <th style={{ padding: '10px 4px' }}>Customer</th>
-                                            <th style={{ padding: '10px 4px' }}>Product Info</th>
-                                            <th style={{ padding: '10px 4px' }}>Qty</th>
-                                            <th style={{ padding: '10px 4px' }}>Total Amount</th>
-                                            <th style={{ padding: '10px 4px' }}>Paid Amount</th>
-                                            <th style={{ padding: '10px 4px' }}>Condition</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {salesToday.map((sale, i) => {
-                                            const total = Number(sale.total_amount || 0);
-                                            const paid = Number(sale.paid_amount || 0);
-                                            const udhaar = total - paid;
-                                            return (
-                                                <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}>
-                                                    <td style={{ padding: '10px 4px' }}>{sale.buyer_name || sale.buyers?.name || 'Walk-in Customer'}</td>
-                                                    <td style={{ padding: '10px 4px' }}>{sale.products?.name || `Product ID ${sale.product_id}`}</td>
-                                                    <td style={{ padding: '10px 4px' }}>{sale.quantity}</td>
-                                                    <td style={{ padding: '10px 4px' }}>Rs. {total.toLocaleString()}</td>
-                                                    <td style={{ padding: '10px 4px', color: 'var(--success)' }}>Rs. {paid.toLocaleString()}</td>
-                                                    <td style={{ padding: '10px 4px' }}>
-                                                        {udhaar > 0 ? (
-                                                            <span style={{ color: 'var(--danger)', fontWeight: 600 }}>Udhaar: Rs. {udhaar.toLocaleString()}</span>
-                                                        ) : (
-                                                            <span style={{ color: 'var(--success)', fontWeight: 600 }}>Clear</span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                                <div className="premium-table-wrap">
+                                    <table className="premium-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Customer</th>
+                                                <th>Product Info</th>
+                                                <th>Qty</th>
+                                                <th>Total Amount</th>
+                                                <th>Paid Amount</th>
+                                                <th>Condition</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {salesToday.map((sale, i) => {
+                                                const total = Number(sale.total_amount || 0);
+                                                const paid = Number(sale.paid_amount || 0);
+                                                const udhaar = total - paid;
+                                                return (
+                                                    <tr key={i}>
+                                                        <td>{sale.buyer_name || sale.buyers?.name || 'Walk-in Customer'}</td>
+                                                        <td>
+                                                            <div style={{ fontWeight: 500 }}>{sale.products?.name || `Product ID ${sale.product_id}`}</div>
+                                                        </td>
+                                                        <td>{sale.quantity}</td>
+                                                        <td style={{ fontWeight: 600 }}>Rs. {total.toLocaleString()}</td>
+                                                        <td style={{ color: 'var(--success)', fontWeight: 600 }}>Rs. {paid.toLocaleString()}</td>
+                                                        <td>
+                                                            {udhaar > 0 ? (
+                                                                <span style={{ color: 'var(--danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.15)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.85rem' }}>
+                                                                    Udhaar: Rs. {udhaar.toLocaleString()}
+                                                                </span>
+                                                            ) : (
+                                                                <span style={{ color: 'var(--success)', fontWeight: 600, background: 'rgba(34, 197, 94, 0.15)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.85rem' }}>
+                                                                    Clear
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
                         </div>
 

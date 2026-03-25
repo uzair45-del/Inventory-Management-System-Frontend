@@ -1,0 +1,261 @@
+/* Reports.css - Premium Analytics Styling */
+
+.report-hero-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.stat-card-premium {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card-premium:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-hover, rgba(255,255,255,0.2));
+}
+
+.stat-card-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: var(--card-accent, var(--accent-primary));
+    opacity: 0.9;
+    box-shadow: 0 0 15px var(--card-accent);
+}
+
+.stat-card-premium.blue { --card-accent: #38bdf8; --border-hover: rgba(56, 189, 248, 0.4); }
+.stat-card-premium.purple { --card-accent: #a855f7; --border-hover: rgba(168, 85, 247, 0.4); }
+.stat-card-premium.red { --card-accent: #ef4444; --border-hover: rgba(239, 68, 68, 0.4); }
+.stat-card-premium.green { --card-accent: #10b981; --border-hover: rgba(16, 185, 129, 0.4); }
+.stat-card-premium.orange { --card-accent: #f59e0b; --border-hover: rgba(245, 158, 11, 0.4); }
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--card-accent);
+}
+
+.stat-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.stat-row:hover {
+    color: var(--text-primary);
+}
+
+.stat-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.stat-row.highlight {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px dashed var(--glass-border);
+    border-bottom: none;
+    font-size: 1.1rem;
+}
+
+.stat-row.highlight .stat-value {
+    font-size: 1.25rem;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Premium Lists */
+.premium-list-container {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.premium-list-container:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--glass-border-hover);
+}
+
+.premium-list-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.premium-list-header h3 {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    margin: 0;
+    font-weight: 600;
+}
+
+.premium-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.premium-list-item {
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid transparent;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-secondary);
+}
+
+[data-theme='light'] .premium-list-item {
+    background: rgba(0,0,0,0.02);
+}
+
+.premium-list-item:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: var(--glass-border);
+    transform: translateX(6px);
+    color: var(--text-primary);
+}
+
+[data-theme='light'] .premium-list-item:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+.premium-list-item strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Premium Tables */
+.premium-table-wrap {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow-x: auto;
+    box-shadow: var(--shadow-sm);
+    margin-top: 16px;
+}
+
+.premium-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.premium-table th {
+    text-align: left;
+    padding: 14px 16px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.premium-table td {
+    padding: 14px 16px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--glass-border);
+    transition: background 0.2s;
+}
+
+.premium-table tr:last-child td {
+    border-bottom: none;
+}
+
+.premium-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.premium-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='light'] .premium-table tbody tr:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* Print/PDF mode overrides */
+.pdf-mode-active .stat-card-premium {
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    color: #000 !important;
+    break-inside: avoid;
+}
+.pdf-mode-active .stat-title, .pdf-mode-active .stat-value, .pdf-mode-active .stat-row {
+    color: #000 !important;
+}
+.pdf-mode-active .stat-row {
+    border-color: #eee !important;
+}
+.pdf-mode-active .premium-list-container {
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+}
+.pdf-mode-active .premium-table-wrap {
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+}
+.pdf-mode-active .premium-table th, .pdf-mode-active .premium-table td {
+    color: #000 !important;
+}
+.pdf-mode-active .stat-card-premium::before {
+    display: none !important;
+}
