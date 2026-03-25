@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Truck, FileText, Package, BarChart3, LogOut, Receipt, CalendarDays, Building2 } from 'lucide-react';
+import { LayoutDashboard, Users, Truck, FileText, Package, BarChart3, LogOut, Receipt, CalendarDays, Building2, ClipboardList } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
@@ -34,6 +34,7 @@ const Sidebar = () => {
         { path: '/billing', name: 'Billing', icon: <FileText size={20} /> },
         { path: '/sales', name: 'Recent Sales', icon: <BarChart3 size={20} /> },
         { path: '/expenses', name: 'Expenses', icon: <Receipt size={20} /> },
+        { path: '/daily-report', name: 'Daily Report', icon: <ClipboardList size={20} /> },
         { path: '/monthly-report', name: 'Monthly Report', icon: <CalendarDays size={20} /> },
     ];
 

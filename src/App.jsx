@@ -15,6 +15,7 @@ const Billing = lazy(() => import('./pages/Billing'));
 const RecentSales = lazy(() => import('./pages/RecentSales'));
 const Expenses = lazy(() => import('./pages/Expenses'));
 const MonthlyReport = lazy(() => import('./pages/MonthlyReport'));
+const DailyReport = lazy(() => import('./pages/DailyReport'));
 const Companies = lazy(() => import('./pages/Companies'));
 
 // Lightweight loading fallback shown while a lazy chunk loads
@@ -56,6 +57,7 @@ function App() {
               <Route path="sales" element={<RecentSales />} />
               <Route path="expenses" element={<Expenses />} />
               <Route path="monthly-report" element={<MonthlyReport />} />
+              <Route path="daily-report" element={<DailyReport />} />
               <Route path="companies" element={<Companies />} />
             </Route>
           </Route>
