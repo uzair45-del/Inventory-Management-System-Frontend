@@ -370,3 +370,58 @@
 .mt-auto {
     margin-top: auto;
 }
+
+/* Print Media Styles for Native Printing Support */
+@media print {
+    .sidebar-container, .navbar, .billing-entry-panel {
+        display: none !important;
+    }
+    
+    .billing-container {
+        grid-template-columns: 1fr;
+        display: block;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .billing-preview-panel {
+        width: 100%;
+        max-width: 80mm; /* Standard receipt ticket width */
+        margin: 0 auto;
+        position: static;
+        height: auto;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    
+    .receipt.glass-panel {
+        background: white !important;
+        border: none !important;
+        color: black !important;
+        box-shadow: none !important;
+        padding: 0;
+    }
+    
+    .btn-secondary, .btn-primary, .icon-btn-danger, .mt-auto {
+        display: none !important;
+    }
+}
+
+/* PDF Generation Explicit Color Overrides */
+.pdf-mode-active {
+    background: white !important;
+    color: black !important;
+}
+.pdf-mode-active * {
+    color: black !important;
+}
+.pdf-mode-active .receipt-logo {
+    border-color: black !important;
+    background: transparent !important;
+}
+.pdf-mode-active svg {
+    stroke: black !important;
+}
