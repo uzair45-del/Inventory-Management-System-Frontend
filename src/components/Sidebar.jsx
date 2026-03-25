@@ -39,11 +39,10 @@ const Sidebar = () => {
 
     return (
         <aside className="sidebar glass-panel">
-            <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '24px 0 16px' }}>
                 <div className="logo-icon">
                     <LayoutDashboard size={28} color="var(--accent-primary)" />
                 </div>
-                <h2 className="logo-text text-gradient" style={{ flex: 1, margin: 0 }}>Inventory<br /><span className="text-gradient-accent">Pro</span></h2>
             </div>
 
             <nav className="sidebar-nav">
