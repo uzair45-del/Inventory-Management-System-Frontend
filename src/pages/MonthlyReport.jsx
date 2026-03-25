@@ -14,6 +14,7 @@ const MonthlyReport = () => {
     const currentMonthStr = (new Date().getMonth() + 1).toString().padStart(2, '0');
     const [filterYear, setFilterYear] = useState(currentYearStr);
     const [filterMonth, setFilterMonth] = useState(currentMonthStr);
+    const [viewMode, setViewMode] = useState('overview'); // 'overview' | 'daily_summary'
     const reportRef = useRef();
 
     useEffect(() => {
@@ -123,6 +124,22 @@ const MonthlyReport = () => {
                         </div>
                     </div>
                     
+                    {/* View Toggle */}
+                    <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '12px', background: 'var(--bg-secondary)' }}>
+                        <button 
+                            onClick={() => setViewMode('overview')}
+                            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'overview' ? 'var(--accent-primary)' : 'transparent', color: viewMode === 'overview' ? '#fff' : 'var(--text-muted)', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', outline: 'none' }}
+                        >
+                            Overview
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('daily_summary')}
+                            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'daily_summary' ? 'var(--accent-primary)' : 'transparent', color: viewMode === 'daily_summary' ? '#fff' : 'var(--text-muted)', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', outline: 'none' }}
+                        >
+                            Daily Summaries
+                        </button>
+                    </div>
+
                     {/* PDF Download Button */}
                     <button 
                         className="btn-primary" 
@@ -134,323 +151,403 @@ const MonthlyReport = () => {
                     </button>
                 </div>
             </header>
-
-            <div ref={reportRef} style={{ background: 'var(--bg-primary)', padding: '20px', borderRadius: '8px' }}>
-                {/* KEY METRICS */}
-            <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-
-                {/* Net Cash Flow */}
-                <div className="stat-card glass-panel flex-row" style={{ padding: '24px', borderRadius: '16px', border: summary.cash_flow_profit >= 0 ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)' }}>
-                    <div className="stat-icon" style={{ background: summary.cash_flow_profit >= 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: summary.cash_flow_profit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                        {summary.cash_flow_profit >= 0 ? <TrendingUp size={32} /> : <TrendingDown size={32} />}
-                    </div>
-                    <div className="stat-content">
-                        <p className="stat-title" style={{ color: 'var(--text-secondary)' }}>Cash Flow Profit (In hand)</p>
-                        <h3 className="stat-value" style={{ color: summary.cash_flow_profit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                            Rs. {summary.cash_flow_profit.toLocaleString()}
-                        </h3>
-                    </div>
+            <div ref={reportRef} style={{ background: 'var(--bg-primary)', padding: '30px', borderRadius: '20px', border: '1px solid var(--glass-border)' }}>
+                
+                {/* PDF Report Header (Only visible / structured for doc feel) */}
+                <div style={{ textAlign: 'center', marginBottom: '30px', paddingBottom: '20px', borderBottom: '2px solid var(--border-color)' }}>
+                    <h1 style={{ fontSize: '1.8rem', color: 'var(--text-primary)', margin: '0 0 8px' }}>
+                        {viewMode === 'overview' ? 'Monthly Summary' : 'Day-by-Day Monthly Summary'}
+                    </h1>
+                    <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', margin: 0 }}>Period: <strong>{filterMonth}/{filterYear}</strong></p>
                 </div>
 
-                {/* Accrual Profit */}
-                <div className="stat-card glass-panel flex-row" style={{ padding: '24px', borderRadius: '16px', border: '1px solid rgba(56, 189, 248, 0.2)' }} title="Profit based on invoice totals, regardless of if cash was received">
-                    <div className="stat-icon" style={{ background: 'rgba(56, 189, 248, 0.15)', color: 'var(--info)' }}>
-                        <Wallet size={32} />
-                    </div>
-                    <div className="stat-content">
-                        <p className="stat-title" style={{ color: 'var(--text-secondary)' }}>Gross Business Margin</p>
-                        <h3 className="stat-value" style={{ color: 'var(--text-primary)' }}>Rs. {summary.accrual_profit.toLocaleString()}</h3>
-                    </div>
-                </div>
+                {/* OVERVIEW MODE */}
+                <div style={{ display: viewMode === 'overview' ? 'block' : 'none' }}>
+                    {/* KEY METRICS */}
+                    <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
 
-                {/* Expenses */}
-                <div className="stat-card glass-panel flex-row" style={{ padding: '24px', borderRadius: '16px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
-                    <div className="stat-icon" style={{ background: 'rgba(249, 115, 22, 0.15)', color: 'var(--warning)' }}>
-                        <DollarSign size={32} />
-                    </div>
-                    <div className="stat-content">
-                        <p className="stat-title" style={{ color: 'var(--text-secondary)' }}>Total Shop Expenses</p>
-                        <h3 className="stat-value" style={{ color: 'var(--warning)' }}>Rs. {summary.total_expenses.toLocaleString()}</h3>
-                    </div>
-                </div>
-
-                {/* Risk / Dues */}
-                <div className="stat-card glass-panel flex-row" style={{ padding: '24px', borderRadius: '16px', border: '1px solid rgba(234, 179, 8, 0.2)' }}>
-                    <div className="stat-icon" style={{ background: 'rgba(234, 179, 8, 0.15)', color: '#eab308' }}>
-                        <AlertTriangle size={32} />
-                    </div>
-                    <div className="stat-content">
-                        <p className="stat-title" style={{ color: 'var(--text-secondary)' }}>All-Time Buyer Dues pending</p>
-                        <h3 className="stat-value" style={{ color: '#eab308' }}>Rs. {summary.total_all_time_dues_from_buyers.toLocaleString()}</h3>
-                    </div>
-                </div>
-            </div>
-
-            {/* DETAILED LEDGER SPLIT */}
-            <div className="ledger-split" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '30px' }}>
-
-                {/* INCOME SIDE */}
-                <div className="ledger-section">
-                    <h2 style={{ fontSize: '1.2rem', color: '#38bdf8', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Users size={20} /> Income & Receivables
-                    </h2>
-
-                    <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', marginBottom: '24px', background: 'rgba(56, 189, 248, 0.03)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>Total Sales Invoices Made:</span>
-                            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Rs. {summary.total_sales_created_value.toLocaleString()}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>Cash Sales (Fully Paid):</span>
-                            <span style={{ fontWeight: '600', color: 'var(--success)' }}>Rs. {(summary.total_cash_sales_this_month || 0).toLocaleString()}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>Udhaar Installments Received:</span>
-                            <span style={{ fontWeight: '600', color: 'var(--info)' }}>Rs. {summary.total_sales_collected_this_month.toLocaleString()}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '14px', borderTop: '1px dashed var(--glass-border)' }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>New Credit Given This Month:</span>
-                            <span style={{ fontWeight: '600', color: 'var(--warning)' }}>Rs. {summary.total_credit_given_this_month.toLocaleString()}</span>
-                        </div>
-                    </div>
-
-                    {/* Cash Sales by Salesman */}
-                    <div className="glass-panel table-container" style={{ marginBottom: '20px' }}>
-                        <h3 style={{ padding: '15px 20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Banknote size={16} color="#22c55e" /> Cash Collected (by Salesman)
-                        </h3>
-                        {activity_lists.cash_sales_by_salesman.length === 0 ? (
-                            <div className="empty-state" style={{ padding: '2rem' }}>
-                                <p>No cash sales recorded this month.</p>
+                        {/* Net Cash Flow */}
+                        <div className="stat-card glass-panel flex-row" style={{ padding: '24px', borderRadius: '16px', border: summary.cash_flow_profit >= 0 ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)' }}>
+                            <div className="stat-icon" style={{ background: summary.cash_flow_profit >= 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: summary.cash_flow_profit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                                {summary.cash_flow_profit >= 0 ? <TrendingUp size={32} /> : <TrendingDown size={32} />}
                             </div>
-                        ) : (
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Salesman / User</th>
-                                        <th style={{ textAlign: 'center' }}>Bills</th>
-                                        <th style={{ textAlign: 'right' }}>Cash Collected</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {activity_lists.cash_sales_by_salesman.map(s => (
-                                        <tr key={s.id}>
-                                            <td style={{ fontWeight: '500' }}>{s.salesman_name}</td>
-                                            <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{s.num_cash_bills}</td>
-                                            <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: '600' }}>+Rs. {s.total_cash_collected.toLocaleString()}</td>
-                                        </tr>
-                                    ))}
-                                    {/* Total row */}
-                                    <tr style={{ borderTop: '2px solid var(--glass-border)', background: 'rgba(34,197,94,0.05)' }}>
-                                        <td style={{ fontWeight: '700', color: 'var(--success)' }}>Total</td>
-                                        <td style={{ textAlign: 'center', fontWeight: '700' }}>
-                                            {activity_lists.cash_sales_by_salesman.reduce((s, r) => s + r.num_cash_bills, 0)}
-                                        </td>
-                                        <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: '700' }}>
-                                            +Rs. {(summary.total_cash_sales_this_month || 0).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
-
-                    {/* Udhaar Installments received */}
-                    <div className="glass-panel table-container">
-                        <h3 style={{ padding: '15px 20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Users size={16} color="#a78bfa" /> Udhaar Installments Received
-                        </h3>
-                        {activity_lists.udhaar_payments_received.length === 0 ? (
-                            <div className="empty-state" style={{ padding: '2rem' }}>
-                                <p>No udhaar payments received this month.</p>
+                            <div className="stat-content">
+                                <p className="stat-title" style={{ color: 'var(--text-secondary)' }}>Cash Flow Profit (In hand)</p>
+                                <h3 className="stat-value" style={{ color: summary.cash_flow_profit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                                    Rs. {summary.cash_flow_profit.toLocaleString()}
+                                </h3>
                             </div>
-                        ) : (
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Phone</th>
-                                        <th style={{ textAlign: 'right' }}>Received</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {activity_lists.udhaar_payments_received.map(b => (
-                                        <tr key={b.id}>
-                                            <td>{b.name}</td>
-                                            <td>{b.phone}</td>
-                                            <td style={{ textAlign: 'right', color: 'var(--accent-primary)', fontWeight: '500' }}>+Rs. {b.amount_paid_this_month.toLocaleString()}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
-                    </div>
-                </div>
+                        </div>
 
-                {/* OUTFLOW SIDE */}
-                <div className="ledger-section">
-                    <h2 style={{ fontSize: '1.2rem', color: '#ef4444', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Truck size={20} /> Expenses & Payables
-                    </h2>
+                        {/* Accrual Profit */}
+                        <div className="stat-card glass-panel flex-row" style={{ padding: '24px', borderRadius: '16px', border: '1px solid rgba(56, 189, 248, 0.2)' }} title="Profit based on invoice totals, regardless of if cash was received">
+                            <div className="stat-icon" style={{ background: 'rgba(56, 189, 248, 0.15)', color: 'var(--info)' }}>
+                                <Wallet size={32} />
+                            </div>
+                            <div className="stat-content">
+                                <p className="stat-title" style={{ color: 'var(--text-secondary)' }}>Gross Business Margin</p>
+                                <h3 className="stat-value" style={{ color: 'var(--text-primary)' }}>Rs. {summary.accrual_profit.toLocaleString()}</h3>
+                            </div>
+                        </div>
 
-                    <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', marginBottom: '24px', background: 'rgba(239, 68, 68, 0.03)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>Total Purchase Invoices Made:</span>
-                            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Rs. {summary.total_purchases_created_value.toLocaleString()}</span>
+                        {/* Expenses */}
+                        <div className="stat-card glass-panel flex-row" style={{ padding: '24px', borderRadius: '16px', border: '1px solid rgba(249, 115, 22, 0.2)' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(249, 115, 22, 0.15)', color: 'var(--warning)' }}>
+                                <DollarSign size={32} />
+                            </div>
+                            <div className="stat-content">
+                                <p className="stat-title" style={{ color: 'var(--text-secondary)' }}>Total Shop Expenses</p>
+                                <h3 className="stat-value" style={{ color: 'var(--warning)' }}>Rs. {summary.total_expenses.toLocaleString()}</h3>
+                            </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>Actual Cash Paid to Suppliers:</span>
-                            <span style={{ fontWeight: '600', color: 'var(--danger)' }}>Rs. {summary.total_purchases_paid_this_month.toLocaleString()}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '14px', borderTop: '1px dashed var(--glass-border)', marginBottom: '14px' }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>Total Shop Expenses:</span>
-                            <span style={{ fontWeight: '600', color: 'var(--warning)' }}>Rs. {summary.total_expenses.toLocaleString()}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '14px', borderTop: '1px dashed var(--glass-border)' }}>
-                            <span style={{ color: 'var(--text-secondary)' }}>New Credit Taken This Month:</span>
-                            <span style={{ fontWeight: '600', color: 'var(--info)' }}>Rs. {summary.total_credit_taken_this_month.toLocaleString()}</span>
+
+                        {/* Risk / Dues */}
+                        <div className="stat-card glass-panel flex-row" style={{ padding: '24px', borderRadius: '16px', border: '1px solid rgba(234, 179, 8, 0.2)' }}>
+                            <div className="stat-icon" style={{ background: 'rgba(234, 179, 8, 0.15)', color: '#eab308' }}>
+                                <AlertTriangle size={32} />
+                            </div>
+                            <div className="stat-content">
+                                <p className="stat-title" style={{ color: 'var(--text-secondary)' }}>All-Time Buyer Dues pending</p>
+                                <h3 className="stat-value" style={{ color: '#eab308' }}>Rs. {summary.total_all_time_dues_from_buyers.toLocaleString()}</h3>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Breakdown of Expenses */}
-                    <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px', marginBottom: '20px' }}>
-                        <h3 style={{ margin: '0 0 15px 0', fontSize: '1rem' }}>Expense Breakdown</h3>
-                        {Object.keys(expense_breakdown).length === 0 ? (
-                            <p style={{ color: 'var(--text-muted)' }}>No expenses recorded.</p>
-                        ) : (
-                            Object.entries(expense_breakdown).map(([category, amount]) => (
-                                <div key={category} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
-                                    <span style={{ color: 'var(--text-secondary)' }}>{category}</span>
-                                    <span style={{ fontWeight: '500' }}>Rs. {amount.toLocaleString()}</span>
+                    {/* DETAILED LEDGER SPLIT */}
+                    <div className="ledger-split" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '30px' }}>
+
+                        {/* INCOME SIDE */}
+                        <div className="ledger-section">
+                            <h2 style={{ fontSize: '1.2rem', color: '#38bdf8', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <Users size={20} /> Income & Receivables
+                            </h2>
+
+                            <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', marginBottom: '24px', background: 'rgba(56, 189, 248, 0.03)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>Total Sales Invoices Made:</span>
+                                    <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Rs. {summary.total_sales_created_value.toLocaleString()}</span>
                                 </div>
-                            ))
-                        )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>Cash Sales (Fully Paid):</span>
+                                    <span style={{ fontWeight: '600', color: 'var(--success)' }}>Rs. {(summary.total_cash_sales_this_month || 0).toLocaleString()}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>Udhaar Installments Received:</span>
+                                    <span style={{ fontWeight: '600', color: 'var(--info)' }}>Rs. {summary.total_sales_collected_this_month.toLocaleString()}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '14px', borderTop: '1px dashed var(--glass-border)' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>New Credit Given This Month:</span>
+                                    <span style={{ fontWeight: '600', color: 'var(--warning)' }}>Rs. {summary.total_credit_given_this_month.toLocaleString()}</span>
+                                </div>
+                            </div>
+
+                            {/* Cash Sales by Salesman */}
+                            <div className="glass-panel table-container" style={{ marginBottom: '20px' }}>
+                                <h3 style={{ padding: '15px 20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Banknote size={16} color="#22c55e" /> Cash Collected (by Salesman)
+                                </h3>
+                                {activity_lists.cash_sales_by_salesman.length === 0 ? (
+                                    <div className="empty-state" style={{ padding: '2rem' }}>
+                                        <p>No cash sales recorded this month.</p>
+                                    </div>
+                                ) : (
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Salesman / User</th>
+                                                <th style={{ textAlign: 'center' }}>Bills</th>
+                                                <th style={{ textAlign: 'right' }}>Cash Collected</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {activity_lists.cash_sales_by_salesman.map(s => (
+                                                <tr key={s.id}>
+                                                    <td style={{ fontWeight: '500' }}>{s.salesman_name}</td>
+                                                    <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{s.num_cash_bills}</td>
+                                                    <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: '600' }}>+Rs. {s.total_cash_collected.toLocaleString()}</td>
+                                                </tr>
+                                            ))}
+                                            {/* Total row */}
+                                            <tr style={{ borderTop: '2px solid var(--glass-border)', background: 'rgba(34,197,94,0.05)' }}>
+                                                <td style={{ fontWeight: '700', color: 'var(--success)' }}>Total</td>
+                                                <td style={{ textAlign: 'center', fontWeight: '700' }}>
+                                                    {activity_lists.cash_sales_by_salesman.reduce((s, r) => s + r.num_cash_bills, 0)}
+                                                </td>
+                                                <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: '700' }}>
+                                                    +Rs. {(summary.total_cash_sales_this_month || 0).toLocaleString()}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+
+                            {/* Udhaar Installments received */}
+                            <div className="glass-panel table-container">
+                                <h3 style={{ padding: '15px 20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Users size={16} color="#a78bfa" /> Udhaar Installments Received
+                                </h3>
+                                {activity_lists.udhaar_payments_received.length === 0 ? (
+                                    <div className="empty-state" style={{ padding: '2rem' }}>
+                                        <p>No udhaar payments received this month.</p>
+                                    </div>
+                                ) : (
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Phone</th>
+                                                <th style={{ textAlign: 'right' }}>Received</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {activity_lists.udhaar_payments_received.map(b => (
+                                                <tr key={b.id}>
+                                                    <td>{b.name}</td>
+                                                    <td>{b.phone}</td>
+                                                    <td style={{ textAlign: 'right', color: 'var(--accent-primary)', fontWeight: '500' }}>+Rs. {b.amount_paid_this_month.toLocaleString()}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* OUTFLOW SIDE */}
+                        <div className="ledger-section">
+                            <h2 style={{ fontSize: '1.2rem', color: '#ef4444', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <Truck size={20} /> Expenses & Payables
+                            </h2>
+
+                            <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', marginBottom: '24px', background: 'rgba(239, 68, 68, 0.03)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>Total Purchase Invoices Made:</span>
+                                    <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Rs. {summary.total_purchases_created_value.toLocaleString()}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>Actual Cash Paid to Suppliers:</span>
+                                    <span style={{ fontWeight: '600', color: 'var(--danger)' }}>Rs. {summary.total_purchases_paid_this_month.toLocaleString()}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '14px', borderTop: '1px dashed var(--glass-border)', marginBottom: '14px' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>Total Shop Expenses:</span>
+                                    <span style={{ fontWeight: '600', color: 'var(--warning)' }}>Rs. {summary.total_expenses.toLocaleString()}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '14px', borderTop: '1px dashed var(--glass-border)' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>New Credit Taken This Month:</span>
+                                    <span style={{ fontWeight: '600', color: 'var(--info)' }}>Rs. {summary.total_credit_taken_this_month.toLocaleString()}</span>
+                                </div>
+                            </div>
+
+                            {/* Breakdown of Expenses */}
+                            <div className="glass-panel" style={{ padding: '20px', borderRadius: '16px', marginBottom: '20px' }}>
+                                <h3 style={{ margin: '0 0 15px 0', fontSize: '1rem' }}>Expense Breakdown</h3>
+                                {Object.keys(expense_breakdown).length === 0 ? (
+                                    <p style={{ color: 'var(--text-muted)' }}>No expenses recorded.</p>
+                                ) : (
+                                    Object.entries(expense_breakdown).map(([category, amount]) => (
+                                        <div key={category} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>{category}</span>
+                                            <span style={{ fontWeight: '500' }}>Rs. {amount.toLocaleString()}</span>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            {/* Payments to Suppliers */}
+                            <div className="glass-panel table-container">
+                                <h3 style={{ padding: '15px 20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1rem' }}>Payments Made to Suppliers</h3>
+                                {activity_lists.payments_made_to_suppliers.length === 0 ? (
+                                    <div className="empty-state" style={{ padding: '2rem' }}>
+                                        <p>No payments to suppliers this month.</p>
+                                    </div>
+                                ) : (
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Supplier Name</th>
+                                                <th style={{ textAlign: 'right' }}>Paid</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {activity_lists.payments_made_to_suppliers.map(s => (
+                                                <tr key={s.id}>
+                                                    <td>{s.name}</td>
+                                                    <td style={{ textAlign: 'right', color: 'var(--danger)', fontWeight: '500' }}>-Rs. {s.amount_paid_this_month.toLocaleString()}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
+
                     </div>
 
-                    {/* Payments to Suppliers */}
-                    <div className="glass-panel table-container">
-                        <h3 style={{ padding: '15px 20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1rem' }}>Payments Made to Suppliers</h3>
-                        {activity_lists.payments_made_to_suppliers.length === 0 ? (
+                    {/* ===== COMPANY-WISE SUMMARY ===== */}
+                    <div className="glass-panel table-container" style={{ marginTop: '30px' }}>
+                        <h3 style={{ padding: '20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1.1rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Building2 size={20} /> Company-Wise Sales Summary (This Month)
+                        </h3>
+                        {company_wise_summary.length === 0 ? (
                             <div className="empty-state" style={{ padding: '2rem' }}>
-                                <p>No payments to suppliers this month.</p>
+                                <p>No sales recorded this month.</p>
                             </div>
                         ) : (
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Supplier Name</th>
-                                        <th style={{ textAlign: 'right' }}>Paid</th>
+                                        <th>Company Name</th>
+                                        <th style={{ textAlign: 'center' }}>Transactions</th>
+                                        <th style={{ textAlign: 'right' }}>Total Sales</th>
+                                        <th style={{ textAlign: 'right' }}>Collected</th>
+                                        <th style={{ textAlign: 'right' }}>Outstanding</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {activity_lists.payments_made_to_suppliers.map(s => (
-                                        <tr key={s.id}>
-                                            <td>{s.name}</td>
-                                            <td style={{ textAlign: 'right', color: 'var(--danger)', fontWeight: '500' }}>-Rs. {s.amount_paid_this_month.toLocaleString()}</td>
+                                    {company_wise_summary.map((c, idx) => (
+                                        <tr key={idx}>
+                                            <td style={{ fontWeight: '600' }}>
+                                                {c.company_name === 'Walk-in / No Company'
+                                                    ? <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>{c.company_name}</span>
+                                                    : c.company_name
+                                                }
+                                            </td>
+                                            <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{c.num_transactions}</td>
+                                            <td style={{ textAlign: 'right', fontWeight: '500' }}>Rs. {c.total_sales.toLocaleString()}</td>
+                                            <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: '500' }}>Rs. {c.total_collected.toLocaleString()}</td>
+                                            <td style={{ textAlign: 'right', color: c.total_outstanding > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: '600' }}>
+                                                {c.total_outstanding > 0 ? `Rs. ${c.total_outstanding.toLocaleString()}` : '✓ Clear'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                {/* Grand total row */}
+                                <tfoot>
+                                    <tr style={{ borderTop: '2px solid var(--glass-border)', background: 'rgba(56,189,248,0.05)', fontWeight: '700' }}>
+                                        <td>Grand Total</td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            {company_wise_summary.reduce((s, c) => s + c.num_transactions, 0)}
+                                        </td>
+                                        <td style={{ textAlign: 'right' }}>
+                                            Rs. {company_wise_summary.reduce((s, c) => s + c.total_sales, 0).toLocaleString()}
+                                        </td>
+                                        <td style={{ textAlign: 'right', color: 'var(--success)' }}>
+                                            Rs. {company_wise_summary.reduce((s, c) => s + c.total_collected, 0).toLocaleString()}
+                                        </td>
+                                        <td style={{ textAlign: 'right', color: 'var(--danger)' }}>
+                                            Rs. {company_wise_summary.reduce((s, c) => s + c.total_outstanding, 0).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        )}
+                    </div>
+
+                    {/* Outdated / All Time Dues Section */}
+                    <div className="glass-panel table-container" style={{ marginTop: '30px' }}>
+                        <h3 style={{ padding: '20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1.1rem', color: '#eab308' }}>
+                            ⚠️ Action Required: Buyers with Outstanding Dues (All-Time)
+                        </h3>
+                        {activity_lists.all_time_buyers_with_dues.length === 0 ? (
+                            <div className="empty-state" style={{ padding: '2rem' }}>
+                                <p style={{ color: 'var(--success)', fontWeight: '500' }}>Great! No pending dues from any buyers.</p>
+                            </div>
+                        ) : (
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Buyer Name</th>
+                                        <th>Phone Number</th>
+                                        <th style={{ textAlign: 'right' }}>Total Remaining Amount to Recover</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {activity_lists.all_time_buyers_with_dues.map(b => (
+                                        <tr key={b.id}>
+                                            <td style={{ fontWeight: '500' }}>{b.name}</td>
+                                            <td>
+                                                <a href={`tel:${b.phone}`} style={{ color: 'var(--info)', textDecoration: 'none' }}>{b.phone}</a>
+                                            </td>
+                                            <td style={{ textAlign: 'right', color: 'var(--danger)', fontWeight: '600' }}>Rs. {b.remaining_due.toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         )}
                     </div>
-                </div>
+                </div> {/* End OVERVIEW MODE */}
 
-            </div>
-
-            {/* ===== COMPANY-WISE SUMMARY ===== */}
-            <div className="glass-panel table-container" style={{ marginTop: '30px' }}>
-                <h3 style={{ padding: '20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1.1rem', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Building2 size={20} /> Company-Wise Sales Summary (This Month)
-                </h3>
-                {company_wise_summary.length === 0 ? (
-                    <div className="empty-state" style={{ padding: '2rem' }}>
-                        <p>No sales recorded this month.</p>
+                {/* DAILY SUMMARIES MODE */}
+                {viewMode === 'daily_summary' && (
+                    <div className="glass-panel table-container" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+                        <h3 style={{ padding: '20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)', background: 'var(--bg-secondary)' }}>
+                            Month Day-by-Day Breakdown
+                        </h3>
+                        {(!reportData.daily_breakdown || reportData.daily_breakdown.length === 0) ? (
+                            <div className="empty-state" style={{ padding: '2rem' }}>
+                                <p style={{ color: 'var(--text-muted)' }}>No activity recorded for this month.</p>
+                            </div>
+                        ) : (
+                            <table className="data-table">
+                                <thead>
+                                    <tr style={{ color: 'var(--text-muted)' }}>
+                                        <th style={{ padding: '16px 20px' }}>Date</th>
+                                        <th style={{ textAlign: 'right', padding: '16px 20px' }}>Sales (#)</th>
+                                        <th style={{ textAlign: 'right', padding: '16px 20px' }}>Total Sale Value</th>
+                                        <th style={{ textAlign: 'right', padding: '16px 20px' }}>Actual Cash Received</th>
+                                        <th style={{ textAlign: 'right', padding: '16px 20px' }}>New Udhaar Given</th>
+                                        <th style={{ textAlign: 'right', padding: '16px 20px' }}>Expenses Logged</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {reportData.daily_breakdown.map((day, idx) => (
+                                        <tr key={idx} style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                                            <td style={{ fontWeight: '600', padding: '16px 20px', color: 'var(--text-primary)' }}>
+                                                {new Date(day.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                            </td>
+                                            <td style={{ textAlign: 'right', color: 'var(--text-secondary)', padding: '16px 20px' }}>{day.num_new_sales > 0 ? day.num_new_sales : '-'}</td>
+                                            <td style={{ textAlign: 'right', fontWeight: '600', padding: '16px 20px', color: 'var(--info)' }}>
+                                                {day.total_sales > 0 ? `Rs. ${day.total_sales.toLocaleString()}` : '-'}
+                                            </td>
+                                            <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: '600', padding: '16px 20px' }}>
+                                                {day.cash_in > 0 ? `Rs. ${day.cash_in.toLocaleString()}` : '-'}
+                                            </td>
+                                            <td style={{ textAlign: 'right', color: day.udhaar_given > 0 ? 'var(--warning)' : 'var(--text-muted)', fontWeight: '600', padding: '16px 20px' }}>
+                                                {day.udhaar_given > 0 ? `Rs. ${day.udhaar_given.toLocaleString()}` : '-'}
+                                            </td>
+                                            <td style={{ textAlign: 'right', color: day.expenses > 0 ? 'var(--danger)' : 'var(--text-muted)', fontWeight: '600', padding: '16px 20px' }}>
+                                                {day.expenses > 0 ? `Rs. ${day.expenses.toLocaleString()}` : '-'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot style={{ background: 'var(--bg-secondary)' }}>
+                                    <tr style={{ fontWeight: '700' }}>
+                                        <td style={{ padding: '16px 20px', color: 'var(--text-primary)' }}>Total for Month</td>
+                                        <td style={{ textAlign: 'right', padding: '16px 20px', color: 'var(--text-primary)' }}>
+                                            {reportData.daily_breakdown.reduce((sum, d) => sum + d.num_new_sales, 0)}
+                                        </td>
+                                        <td style={{ textAlign: 'right', padding: '16px 20px', color: 'var(--info)' }}>
+                                            Rs. {reportData.daily_breakdown.reduce((sum, d) => sum + d.total_sales, 0).toLocaleString()}
+                                        </td>
+                                        <td style={{ textAlign: 'right', padding: '16px 20px', color: 'var(--success)' }}>
+                                            Rs. {reportData.daily_breakdown.reduce((sum, d) => sum + d.cash_in, 0).toLocaleString()}
+                                        </td>
+                                        <td style={{ textAlign: 'right', padding: '16px 20px', color: 'var(--warning)' }}>
+                                            Rs. {reportData.daily_breakdown.reduce((sum, d) => sum + d.udhaar_given, 0).toLocaleString()}
+                                        </td>
+                                        <td style={{ textAlign: 'right', padding: '16px 20px', color: 'var(--danger)' }}>
+                                            Rs. {reportData.daily_breakdown.reduce((sum, d) => sum + d.expenses, 0).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        )}
                     </div>
-                ) : (
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Company Name</th>
-                                <th style={{ textAlign: 'center' }}>Transactions</th>
-                                <th style={{ textAlign: 'right' }}>Total Sales</th>
-                                <th style={{ textAlign: 'right' }}>Collected</th>
-                                <th style={{ textAlign: 'right' }}>Outstanding</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {company_wise_summary.map((c, idx) => (
-                                <tr key={idx}>
-                                    <td style={{ fontWeight: '600' }}>
-                                        {c.company_name === 'Walk-in / No Company'
-                                            ? <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>{c.company_name}</span>
-                                            : c.company_name
-                                        }
-                                    </td>
-                                    <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{c.num_transactions}</td>
-                                    <td style={{ textAlign: 'right', fontWeight: '500' }}>Rs. {c.total_sales.toLocaleString()}</td>
-                                    <td style={{ textAlign: 'right', color: 'var(--success)', fontWeight: '500' }}>Rs. {c.total_collected.toLocaleString()}</td>
-                                    <td style={{ textAlign: 'right', color: c.total_outstanding > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: '600' }}>
-                                        {c.total_outstanding > 0 ? `Rs. ${c.total_outstanding.toLocaleString()}` : '✓ Clear'}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                        {/* Grand total row */}
-                        <tfoot>
-                            <tr style={{ borderTop: '2px solid var(--glass-border)', background: 'rgba(56,189,248,0.05)', fontWeight: '700' }}>
-                                <td>Grand Total</td>
-                                <td style={{ textAlign: 'center' }}>
-                                    {company_wise_summary.reduce((s, c) => s + c.num_transactions, 0)}
-                                </td>
-                                <td style={{ textAlign: 'right' }}>
-                                    Rs. {company_wise_summary.reduce((s, c) => s + c.total_sales, 0).toLocaleString()}
-                                </td>
-                                <td style={{ textAlign: 'right', color: 'var(--success)' }}>
-                                    Rs. {company_wise_summary.reduce((s, c) => s + c.total_collected, 0).toLocaleString()}
-                                </td>
-                                <td style={{ textAlign: 'right', color: 'var(--danger)' }}>
-                                    Rs. {company_wise_summary.reduce((s, c) => s + c.total_outstanding, 0).toLocaleString()}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
                 )}
-            </div>
 
-            {/* Outdated / All Time Dues Section */}
-            <div className="glass-panel table-container" style={{ marginTop: '30px' }}>
-                <h3 style={{ padding: '20px', borderBottom: '1px solid var(--glass-border)', margin: 0, fontSize: '1.1rem', color: '#eab308' }}>
-                    ⚠️ Action Required: Buyers with Outstanding Dues (All-Time)
-                </h3>
-                {activity_lists.all_time_buyers_with_dues.length === 0 ? (
-                    <div className="empty-state" style={{ padding: '2rem' }}>
-                        <p style={{ color: 'var(--success)', fontWeight: '500' }}>Great! No pending dues from any buyers.</p>
-                    </div>
-                ) : (
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Buyer Name</th>
-                                <th>Phone Number</th>
-                                <th style={{ textAlign: 'right' }}>Total Remaining Amount to Recover</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {activity_lists.all_time_buyers_with_dues.map(b => (
-                                <tr key={b.id}>
-                                    <td style={{ fontWeight: '500' }}>{b.name}</td>
-                                    <td>
-                                        <a href={`tel:${b.phone}`} style={{ color: 'var(--info)', textDecoration: 'none' }}>{b.phone}</a>
-                                    </td>
-                                    <td style={{ textAlign: 'right', color: 'var(--danger)', fontWeight: '600' }}>Rs. {b.remaining_due.toLocaleString()}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-
-            {/* Advertisement Footer */}
+                {/* Advertisement Footer */}
             <div style={{ marginTop: '50px', paddingTop: '24px', borderTop: '2px solid var(--border-color)', textAlign: 'center', color: 'var(--text-primary)' }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 700, letterSpacing: '0.5px' }}>Software Developed by Hassan Ali Abrar</h3>
                 <p style={{ margin: '0 0 6px', fontSize: '0.95rem' }}>Instagram: <strong style={{ color: 'var(--info)' }}>hassan.secure</strong> | WhatsApp: <strong style={{ color: 'var(--success)' }}>+92 348 5055098</strong></p>
