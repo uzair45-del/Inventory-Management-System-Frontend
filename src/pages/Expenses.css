@@ -106,3 +106,25 @@
         width: 100%;
     }
 }
+
+/* Small mobile (< 480px) */
+@media (max-width: 480px) {
+    .filters-section {
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .search-input {
+        font-size: 0.875rem;
+        padding: 10px 12px 10px 40px;
+    }
+
+    .month-filter {
+        padding: 4px 12px;
+        font-size: 0.875rem;
+    }
+
+    .expenses-container {
+        padding: 0;
+    }
+}

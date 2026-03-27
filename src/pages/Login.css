@@ -239,3 +239,73 @@
     color: var(--accent-secondary);
     text-decoration: underline;
 }
+
+/* =============================================
+   RESPONSIVE — Login Page
+   ============================================= */
+
+/* Tablet (768px – 1024px) */
+@media (max-width: 1024px) {
+    .login-box {
+        max-width: 400px;
+        padding: 2.5rem 2rem;
+    }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 768px) {
+    .login-box {
+        max-width: 100%;
+        margin: 1rem;
+        padding: 2rem 1.5rem;
+    }
+
+    .login-title {
+        font-size: 1.5rem;
+    }
+
+    .login-subtitle {
+        font-size: 0.875rem;
+    }
+
+    .role-selector {
+        margin-bottom: 1.5rem;
+    }
+
+    .login-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .login-form {
+        gap: 1.25rem;
+    }
+}
+
+/* Small mobile (< 480px) */
+@media (max-width: 480px) {
+    .login-box {
+        padding: 1.5rem 1rem;
+        margin: 0.75rem;
+    }
+
+    .login-title {
+        font-size: 1.35rem;
+    }
+
+    .login-logo {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 1rem;
+    }
+
+    .login-btn {
+        font-size: 0.9rem;
+    }
+
+    .role-tab {
+        font-size: 0.82rem;
+        padding: 0.6rem;
+    }
+}

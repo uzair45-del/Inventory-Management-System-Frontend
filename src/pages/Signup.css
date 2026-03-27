@@ -82,3 +82,58 @@
     color: var(--accent-secondary);
     text-decoration: underline;
 }
+
+/* =============================================
+   RESPONSIVE — Signup Page
+   ============================================= */
+
+/* Tablet (768px – 1024px) */
+@media (max-width: 1024px) {
+    .signup-box {
+        max-width: 420px;
+        padding: 2rem 2rem;
+    }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 768px) {
+    .signup-box {
+        max-width: 100%;
+        margin: 1rem;
+        padding: 2rem 1.5rem;
+    }
+
+    .signup-title {
+        font-size: 1.5rem;
+    }
+
+    .signup-subtitle {
+        font-size: 0.875rem;
+    }
+
+    .signup-form {
+        gap: 1rem;
+    }
+}
+
+/* Small mobile (< 480px) */
+@media (max-width: 480px) {
+    .signup-box {
+        padding: 1.5rem 1rem;
+        margin: 0.75rem;
+    }
+
+    .signup-title {
+        font-size: 1.35rem;
+    }
+
+    .signup-logo {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 1rem;
+    }
+
+    .signup-btn {
+        font-size: 0.9rem;
+    }
+}

@@ -27,3 +27,64 @@
 }
 
 /* Animations added inline in React component */
+
+/* =============================================
+   RESPONSIVE — Monthly Report Page
+   ============================================= */
+
+/* Tablet (768px – 1024px) */
+@media (max-width: 1024px) {
+    .report-container {
+        max-width: 100%;
+    }
+
+    .ledger-section h2 {
+        font-size: 1.1rem;
+    }
+
+    /* table-container already handled by global index.css */
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 768px) {
+    .report-container {
+        padding: 0;
+    }
+
+    .ledger-section h2 {
+        font-size: 1rem;
+        margin-bottom: 14px;
+        gap: 8px;
+    }
+
+    /* Disable hover lift on stat cards (touch) */
+    .stat-card:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Ensure data tables scroll horizontally */
+    .data-table {
+        min-width: 480px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 10px 12px !important;
+        font-size: 0.82rem;
+    }
+}
+
+/* Small mobile (< 480px) */
+@media (max-width: 480px) {
+    .ledger-section h2 {
+        font-size: 0.92rem;
+        margin-bottom: 10px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 8px 10px !important;
+        font-size: 0.78rem;
+    }
+}

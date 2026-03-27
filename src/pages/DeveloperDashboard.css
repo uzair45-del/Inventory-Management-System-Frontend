@@ -286,4 +286,47 @@
     .dev-card {
         padding: 1.5rem;
     }
+
+    .dev-main-content {
+        padding: 0 1rem;
+    }
+
+    /* System stats boxes wrap into 2 columns */
+    .system-stats > div {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
+/* Small mobile (< 480px) */
+@media (max-width: 480px) {
+    .dev-card {
+        padding: 1.25rem 1rem;
+    }
+
+    .dev-card h2 {
+        font-size: 1.2rem;
+    }
+
+    .dev-badge {
+        display: none; /* too cramped on very small screens */
+    }
+
+    .dev-main-content {
+        padding: 0 0.75rem;
+    }
+
+    /* System stats boxes: 1 column */
+    .system-stats > div {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-box {
+        padding: 1rem;
+    }
+
+    .btn-logout span {
+        display: none; /* icon-only on tiny screens */
+    }
 }
