@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Plus, Edit2, Trash2, Search, DollarSign, X } from 'lucide-react';
 import CustomDropdown from '../components/CustomDropdown';
@@ -88,12 +88,14 @@ const Expenses = () => {
         }
     };
 
-    const filteredExpenses = expenses.filter(exp =>
-        exp.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (exp.description && exp.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-
-    const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+    const { filteredExpenses, totalExpenses } = useMemo(() => {
+        const filtered = expenses.filter(exp =>
+            exp.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (exp.description && exp.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        const total = filtered.reduce((sum, exp) => sum + Number(exp.amount), 0);
+        return { filteredExpenses: filtered, totalExpenses: total };
+    }, [expenses, searchTerm]);
 
     return (
         <div className="expenses-container page-container fade-in">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, TrendingUp, Calendar, DollarSign } from 'lucide-react';
 import './RecentSales.css';
@@ -73,20 +73,29 @@ const RecentSales = () => {
         }
     };
 
-    const threshold = getDateThreshold(activeFilter);
+    const { filteredSales, totalRevenue, totalPaid, totalPending } = useMemo(() => {
+        const threshold = getDateThreshold(activeFilter);
+        
+        const filtered = sales.filter(sale => {
+            const saleDate = new Date(sale.purchase_date);
+            const withinDate = saleDate >= threshold;
+            const matchesSearch =
+                (sale.products?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (sale.buyers?.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+            return withinDate && matchesSearch;
+        });
 
-    const filteredSales = sales.filter(sale => {
-        const saleDate = new Date(sale.purchase_date);
-        const withinDate = saleDate >= threshold;
-        const matchesSearch =
-            (sale.products?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (sale.buyers?.name || '').toLowerCase().includes(searchQuery.toLowerCase());
-        return withinDate && matchesSearch;
-    });
+        const rev = filtered.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
+        const paid = filtered.reduce((sum, s) => sum + Number(s.paid_amount || 0), 0);
+        const pend = rev - paid;
 
-    const totalRevenue = filteredSales.reduce((sum, s) => sum + Number(s.total_amount || 0), 0);
-    const totalPaid = filteredSales.reduce((sum, s) => sum + Number(s.paid_amount || 0), 0);
-    const totalPending = totalRevenue - totalPaid;
+        return {
+            filteredSales: filtered,
+            totalRevenue: rev,
+            totalPaid: paid,
+            totalPending: pend
+        };
+    }, [sales, searchQuery, activeFilter]);
 
     return (
         <div className="page-container">

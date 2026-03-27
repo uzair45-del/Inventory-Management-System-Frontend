@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, Plus, MoreVertical, CreditCard, Edit, Trash2, X } from 'lucide-react';
 import './Buyers.css';
@@ -219,22 +219,25 @@ const Buyers = () => {
         }
     };
 
-    const filteredBuyers = buyers.filter(buyer =>
-        buyer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (buyer.company_name && buyer.company_name.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+    const flattenedData = useMemo(() => {
+        const filtered = buyers.filter(buyer =>
+            buyer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (buyer.company_name && buyer.company_name.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
 
-    const flattenedData = [];
-    filteredBuyers.forEach(buyer => {
-        if (buyer.buyer_transactions && buyer.buyer_transactions.length > 0) {
-            buyer.buyer_transactions.forEach(txn => {
-                flattenedData.push({ ...buyer, txn });
-            });
-        } else {
-            // Buyer with no transactions yet
-            flattenedData.push({ ...buyer, txn: null });
-        }
-    });
+        const flattened = [];
+        filtered.forEach(buyer => {
+            if (buyer.buyer_transactions && buyer.buyer_transactions.length > 0) {
+                buyer.buyer_transactions.forEach(txn => {
+                    flattened.push({ ...buyer, txn });
+                });
+            } else {
+                // Buyer with no transactions yet
+                flattened.push({ ...buyer, txn: null });
+            }
+        });
+        return flattened;
+    }, [buyers, searchQuery]);
 
     return (
         <div className="page-container">

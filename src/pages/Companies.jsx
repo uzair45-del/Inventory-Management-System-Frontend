@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, Building2, CreditCard, ChevronDown, ChevronUp, X } from 'lucide-react';
 import './Companies.css';
@@ -43,44 +43,56 @@ const Companies = () => {
     };
 
     // Build companyMap from BOTH buyers (udhaar) AND direct buyer_transactions (original bills)
-    const companyMap = {};
-
-    // Source 1: Buyers who have a company_name
-    buyers.forEach(buyer => {
-        const company = buyer.company_name?.trim();
-        if (!company) return;
-        if (!companyMap[company]) companyMap[company] = { buyers: [], txns: [] };
-        companyMap[company].buyers.push(buyer);
-        // Add their buyer_transactions into the unified txn list
-        (buyer.buyer_transactions || []).forEach(txn => {
-            companyMap[company].txns.push({
-                ...txn,
-                buyerName: buyer.name,
-                buyerPhone: buyer.phone
+    const { companyList, grandTotals, companyMap } = useMemo(() => {
+        const cMap = {};
+        
+        buyers.forEach(buyer => {
+            const company = buyer.company_name?.trim();
+            if (!company) return;
+            if (!cMap[company]) cMap[company] = { buyers: [], txns: [] };
+            cMap[company].buyers.push(buyer);
+            (buyer.buyer_transactions || []).forEach(txn => {
+                cMap[company].txns.push({
+                    ...txn,
+                    buyerName: buyer.name,
+                    buyerPhone: buyer.phone
+                });
             });
         });
-    });
 
-    // Source 2: buyer_transactions that have company_name directly (original bills without a buyer record, or future records)
-    allSales.forEach(sale => {
-        const company = sale.company_name?.trim();
-        if (!company) return;
-        // Check if this txn is already added via the buyer source
-        const alreadyAdded = companyMap[company]?.txns.some(t => t.id === sale.id);
-        if (!companyMap[company]) companyMap[company] = { buyers: [], txns: [] };
-        if (!alreadyAdded) {
-            companyMap[company].txns.push({
-                ...sale,
-                products: sale.products,
-                buyerName: sale.buyers?.name || sale.buyer_name || '—',
-                buyerPhone: sale.buyers?.phone || '—'
+        allSales.forEach(sale => {
+            const company = sale.company_name?.trim();
+            if (!company) return;
+            const alreadyAdded = cMap[company]?.txns.some(t => t.id === sale.id);
+            if (!cMap[company]) cMap[company] = { buyers: [], txns: [] };
+            if (!alreadyAdded) {
+                cMap[company].txns.push({
+                    ...sale,
+                    products: sale.products,
+                    buyerName: sale.buyers?.name || sale.buyer_name || '—',
+                    buyerPhone: sale.buyers?.phone || '—'
+                });
+            }
+        });
+
+        const list = Object.entries(cMap)
+            .filter(([name]) => name.toLowerCase().includes(searchQuery.toLowerCase()))
+            .sort(([a], [b]) => a.localeCompare(b));
+
+        let gTotal = 0, gPaid = 0;
+        Object.values(cMap).forEach(({ txns }) => {
+            txns.forEach(txn => {
+                gTotal += Number(txn.total_amount || 0);
+                gPaid += Number(txn.paid_amount || 0);
             });
-        }
-    });
+        });
 
-    const companyList = Object.entries(companyMap)
-        .filter(([name]) => name.toLowerCase().includes(searchQuery.toLowerCase()))
-        .sort(([a], [b]) => a.localeCompare(b));
+        return {
+            companyMap: cMap,
+            companyList: list,
+            grandTotals: { total: gTotal, paid: gPaid, remaining: gTotal - gPaid }
+        };
+    }, [buyers, allSales, searchQuery]);
 
     // Totals for a company (from its unified txns list)
     const getCompanyTotals = (txns) => {
@@ -119,18 +131,6 @@ const Companies = () => {
             setPaying(false);
         }
     };
-
-    // Grand totals across all companies
-    const grandTotals = (() => {
-        let total = 0, paid = 0;
-        Object.values(companyMap).forEach(({ txns }) => {
-            txns.forEach(txn => {
-                total += Number(txn.total_amount || 0);
-                paid += Number(txn.paid_amount || 0);
-            });
-        });
-        return { total, paid, remaining: total - paid };
-    })();
 
     return (
         <div className="page-container fade-in">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, Plus, Package, SlidersHorizontal, Edit, Trash2, X } from 'lucide-react';
 import CustomDropdown from '../components/CustomDropdown';
@@ -184,12 +184,12 @@ const Products = () => {
     };
 
     // Auto-derived: total amount to pay supplier = purchase_rate × quantity
-    const totalToPaySupplier = (() => {
+    const totalToPaySupplier = useMemo(() => {
         const rate = parseFloat(formData.purchase_rate);
         const qty = modalMode === 'add' ? parseInt(formData.total_quantity, 10) : parseInt(formData.add_quantity, 10);
         if (!isNaN(rate) && rate > 0 && !isNaN(qty) && qty > 0) return rate * qty;
         return null;
-    })();
+    }, [formData.purchase_rate, formData.total_quantity, formData.add_quantity, modalMode]);
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
@@ -251,30 +251,32 @@ const Products = () => {
         }
     };
 
-    const filteredProducts = products.filter(product => {
-        const query = searchQuery.toLowerCase();
-        const matchesSearch = product.name.toLowerCase().includes(query) || 
-                              String(product.id).includes(query) || 
-                              formatProductId(product.id).toLowerCase().includes(query);
-        
-        let matchesCategory = true;
-        const remaining = Number(product.remaining_quantity || 0);
+    const filteredProducts = useMemo(() => {
+        return products.filter(product => {
+            const query = searchQuery.toLowerCase();
+            const matchesSearch = product.name.toLowerCase().includes(query) || 
+                                  String(product.id).includes(query) || 
+                                  formatProductId(product.id).toLowerCase().includes(query);
+            
+            let matchesCategory = true;
+            const remaining = Number(product.remaining_quantity || 0);
 
-        if (activeCategory === 'Low Stock') {
-            matchesCategory = remaining > 0 && remaining <= 10;
-        } else if (activeCategory === 'Out of Stock') {
-            matchesCategory = remaining === 0;
-        } else if (activeCategory !== 'All') {
-            matchesCategory = product.category === activeCategory;
-        }
+            if (activeCategory === 'Low Stock') {
+                matchesCategory = remaining > 0 && remaining <= 10;
+            } else if (activeCategory === 'Out of Stock') {
+                matchesCategory = remaining === 0;
+            } else if (activeCategory !== 'All') {
+                matchesCategory = product.category === activeCategory;
+            }
 
-        return matchesSearch && matchesCategory;
-    }).sort((a, b) => {
-        if (sortBy === 'nameAsc') return (a.name || '').localeCompare(b.name || '');
-        if (sortBy === 'priceAsc') return parseFloat(a.price || 0) - parseFloat(b.price || 0);
-        if (sortBy === 'stockAsc') return parseInt(a.remaining_quantity || 0) - parseInt(b.remaining_quantity || 0);
-        return 0;
-    });
+            return matchesSearch && matchesCategory;
+        }).sort((a, b) => {
+            if (sortBy === 'nameAsc') return (a.name || '').localeCompare(b.name || '');
+            if (sortBy === 'priceAsc') return parseFloat(a.price || 0) - parseFloat(b.price || 0);
+            if (sortBy === 'stockAsc') return parseInt(a.remaining_quantity || 0) - parseInt(b.remaining_quantity || 0);
+            return 0;
+        });
+    }, [products, searchQuery, activeCategory, sortBy]);
 
     const togglePurchaseRate = (id) => {
         setShowPurchaseRates(prev => ({
