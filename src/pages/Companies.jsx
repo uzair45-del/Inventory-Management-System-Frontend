@@ -137,7 +137,7 @@ const Companies = () => {
             <div className="page-header">
                 <div>
                     <h1 className="page-title">Companies Ledger</h1>
-                    <p className="page-subtitle">Company-wise udhaar accounts and payment tracking</p>
+                    <p className="page-subtitle">Customers aap ko pay karte hain (company-wise udhaar)</p>
                 </div>
             </div>
 

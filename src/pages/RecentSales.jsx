@@ -59,18 +59,38 @@ const RecentSales = () => {
         }
     };
 
-    const handleUndoSale = async (id) => {
-        if (!window.confirm("Are you sure you want to undo this sale? This will restore the stock and clear associated debt and payments.")) return;
+    /** Full line: DELETE. Partial: POST /sales/:id/return — only this line’s udhaar drops in proportion. */
+    const handleReturnSale = async (sale) => {
+        const max = Number(sale.quantity);
+        const qtyStr = window.prompt(
+            `Return kitni quantity? (Max ${max}. Poori line = saara udhaar / payment is line ka clear. Kam qty = sirf is line ka hissa.)`,
+            String(max)
+        );
+        if (qtyStr === null) return;
+        const q = String(qtyStr).trim() === '' ? max : Number(qtyStr);
+        if (!Number.isFinite(q) || q <= 0 || q > max) {
+            alert('Galat quantity.');
+            return;
+        }
         try {
             const token = localStorage.getItem('inventory_token');
-            await axios.delete(`/api/sales/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            alert('Sale Reversed Successfully!');
+            if (q >= max) {
+                if (!window.confirm('Poori sale line return / undo? Stock wapas, is line ka udhaar clear.')) return;
+                await axios.delete(`/api/sales/${sale.id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            } else {
+                await axios.post(
+                    `/api/sales/${sale.id}/return`,
+                    { quantity: q },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+            }
+            alert('Return save ho gaya.');
             fetchSales();
         } catch (err) {
-            console.error('Error undoing sale:', err);
-            alert('Failed to undo sale. Please try again.');
+            console.error('Return failed:', err);
+            alert(err.response?.data?.error || 'Return fail.');
         }
     };
 
@@ -256,8 +276,8 @@ const RecentSales = () => {
                                             <button 
                                                 className="icon-btn-danger" 
                                                 style={{ padding: '4px 8px', fontSize: '0.8rem', display: 'flex', gap: '4px', alignItems: 'center', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                                                onClick={() => handleUndoSale(sale.id)}
-                                                title="Return items and clear debt"
+                                                onClick={() => handleReturnSale(sale)}
+                                                title="Full or partial return; udhaar sirf is line ke hisaab se"
                                             >
                                                 Return
                                             </button>
