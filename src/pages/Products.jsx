@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, Plus, Package, SlidersHorizontal, Edit, Trash2, X } from 'lucide-react';
 import CustomDropdown from '../components/CustomDropdown';
+import ProductSideList from '../components/ProductSideList';
 import './Products.css';
 
 const Products = () => {
@@ -22,6 +23,11 @@ const Products = () => {
     const [addPaymentAmount, setAddPaymentAmount] = useState('');
     const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
     const [showPurchaseRates, setShowPurchaseRates] = useState({});
+    
+    // Side List State
+    const [isSideListOpen, setIsSideListOpen] = useState(false);
+    const [pendingItems, setPendingItems] = useState([]);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const formatProductId = (id) => {
         if (!id) return '';
@@ -82,18 +88,20 @@ const Products = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this product?')) return;
+        const product = products.find(p => p.id === id);
+        if (!product) return;
+        
+        if (!window.confirm(`Add "${product.name}" to pending deletions?`)) return;
 
-        try {
-            const token = localStorage.getItem('inventory_token');
-            await axios.delete(`/api/products/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            fetchProducts();
-        } catch (err) {
-            console.error('Error deleting product:', err);
-            alert('Failed to delete product.');
-        }
+        // Add to pending list instead of direct deletion
+        const newItem = {
+            action: 'delete',
+            name: product.name,
+            data: product
+        };
+        
+        setPendingItems(prev => [...prev, newItem]);
+        setIsSideListOpen(true);
     };
 
     const openAddModal = () => {
@@ -228,29 +236,42 @@ const Products = () => {
             }
         }
 
-        try {
-            const token = localStorage.getItem('inventory_token');
+        if (modalMode === 'add') {
+            // Validate required fields
+            if (!formData.name.trim() || !formData.price || !formData.total_quantity) {
+                alert('Please fill in all required fields.');
+                return;
+            }
 
-            if (modalMode === 'add') {
-                const dataToSubmit = {
-                    name: formData.name.trim(),
-                    category: formData.category,
-                    price: parseFloat(formData.price),
-                    purchase_rate: formData.purchase_rate ? parseFloat(formData.purchase_rate) : null,
-                    max_discount: formData.max_discount ? parseFloat(formData.max_discount) : null,
-                    purchased_from: formData.purchased_from?.trim() || '',
-                    purchase_date: formData.purchase_date,
-                    total_quantity: parseInt(formData.total_quantity, 10),
-                    quantity_unit: formData.quantity_unit,
-                    paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : 0,
-                    supplier_phone: formData.supplier_phone,
-                    supplier_company_name: formData.supplier_company_name
-                };
-                await axios.post('/api/products', dataToSubmit, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                fetchProducts();
-            } else {
+            // Add to pending list instead of direct database operation
+            const dataToSubmit = {
+                name: formData.name.trim(),
+                category: formData.category,
+                price: parseFloat(formData.price),
+                purchase_rate: formData.purchase_rate ? parseFloat(formData.purchase_rate) : null,
+                max_discount: formData.max_discount ? parseFloat(formData.max_discount) : null,
+                purchased_from: formData.purchased_from?.trim() || '',
+                purchase_date: formData.purchase_date,
+                total_quantity: parseInt(formData.total_quantity, 10),
+                quantity_unit: formData.quantity_unit,
+                paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : 0,
+                supplier_phone: formData.supplier_phone,
+                supplier_company_name: formData.supplier_company_name
+            };
+
+            const newItem = {
+                action: 'add',
+                name: formData.name.trim(),
+                data: dataToSubmit
+            };
+            
+            setPendingItems(prev => [...prev, newItem]);
+            setIsSideListOpen(true);
+            closeModal();
+        } else {
+            // Edit mode remains the same (direct database operation)
+            try {
+                const token = localStorage.getItem('inventory_token');
                 const addQ = formData.add_quantity !== '' && formData.add_quantity != null
                     ? parseInt(formData.add_quantity, 10)
                     : 0;
@@ -305,11 +326,11 @@ const Products = () => {
                 }
 
                 fetchProducts();
+                closeModal();
+            } catch (err) {
+                console.error('Error saving product:', err);
+                alert(err.response?.data?.error || 'Failed to save product.');
             }
-            closeModal();
-        } catch (err) {
-            console.error('Error saving product:', err);
-            alert(err.response?.data?.error || 'Failed to save product.');
         }
     };
 
@@ -345,6 +366,74 @@ const Products = () => {
             ...prev,
             [id]: !prev[id]
         }));
+    };
+
+    // Side List Handlers
+    const handleRemovePendingItem = (index) => {
+        setPendingItems(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleClearAllPending = () => {
+        if (window.confirm('Clear all pending changes?')) {
+            setPendingItems([]);
+        }
+    };
+
+    const handleProcessPendingItems = async () => {
+        if (pendingItems.length === 0) return;
+        
+        if (!window.confirm(`Process ${pendingItems.length} pending changes? This cannot be undone.`)) {
+            return;
+        }
+
+        setIsProcessing(true);
+        const token = localStorage.getItem('inventory_token');
+        let successCount = 0;
+        let errorCount = 0;
+        const errors = [];
+
+        try {
+            // Process items in order
+            for (const item of pendingItems) {
+                try {
+                    if (item.action === 'add') {
+                        await axios.post('/api/products', item.data, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        successCount++;
+                    } else if (item.action === 'delete') {
+                        await axios.delete(`/api/products/${item.data.id}`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        successCount++;
+                    }
+                } catch (err) {
+                    errorCount++;
+                    errors.push(`${item.action === 'add' ? 'Adding' : 'Deleting'} "${item.name}": ${err.response?.data?.error || err.message}`);
+                }
+            }
+
+            // Show results
+            if (errorCount > 0) {
+                alert(`Processed ${successCount} items successfully. ${errorCount} items failed:\n\n${errors.join('\n')}`);
+            } else {
+                alert(`Successfully processed ${successCount} items!`);
+            }
+
+            // Clear pending items and refresh products
+            setPendingItems([]);
+            setIsSideListOpen(false);
+            fetchProducts();
+        } catch (err) {
+            console.error('Error processing pending items:', err);
+            alert('An unexpected error occurred while processing items.');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const toggleSideList = () => {
+        setIsSideListOpen(!isSideListOpen);
     };
 
     const categories = ['All', 'Paint', 'Electric', 'Hardware', 'Out of Stock'];
@@ -891,7 +980,18 @@ const Products = () => {
                     </div >
                 </div >
             )}
-        </div >
+
+            {/* Product Side List */}
+            <ProductSideList
+                isOpen={isSideListOpen}
+                onClose={() => setIsSideListOpen(false)}
+                pendingItems={pendingItems}
+                onRemoveItem={handleRemovePendingItem}
+                onClearAll={handleClearAllPending}
+                onProcessItems={handleProcessPendingItems}
+                isProcessing={isProcessing}
+            />
+        </div>
     );
 };
 
