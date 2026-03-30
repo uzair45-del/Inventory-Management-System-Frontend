@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Plus, Edit2, Trash2, Search, DollarSign, X } from 'lucide-react';
 import CustomDropdown from '../components/CustomDropdown';
+import ProductSideList from '../components/ProductSideList';
 import './Expenses.css'; // We'll create a generic css or reuse styles
 
 const API_URL = '/api/expenses';
@@ -12,6 +13,11 @@ const Expenses = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentExpense, setCurrentExpense] = useState({ id: null, category: 'Petrol', amount: '', description: '', date: new Date().toISOString().split('T')[0] });
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Side List State
+    const [isSideListOpen, setIsSideListOpen] = useState(false);
+    const [pendingItems, setPendingItems] = useState([]);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Separate state for Year and Month
     const currentYearStr = new Date().getFullYear().toString();
@@ -63,12 +69,30 @@ const Expenses = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            if (currentExpense.id) {
-                await axios.put(`${API_URL}/${currentExpense.id}`, currentExpense, getConfig());
-            } else {
-                await axios.post(API_URL, currentExpense, getConfig());
+        
+        if (!currentExpense.id) {
+            // Check if expense with same description already exists in pending list
+            if (isExpenseIdInPendingList(currentExpense.description || currentExpense.category)) {
+                alert('This expense is already in pending list.');
+                return;
             }
+            
+            // For new expenses, add to pending list instead of direct save
+            const newItem = {
+                action: 'add',
+                name: currentExpense.description || currentExpense.category,
+                data: currentExpense
+            };
+            
+            setPendingItems(prev => [...prev, newItem]);
+            setIsSideListOpen(true);
+            handleCloseModal();
+            return;
+        }
+        
+        // For existing expenses (edit mode), keep the original logic
+        try {
+            await axios.put(`${API_URL}/${currentExpense.id}`, currentExpense, getConfig());
             fetchExpenses();
             handleCloseModal();
         } catch (error) {
@@ -78,13 +102,98 @@ const Expenses = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this expense?')) {
-            try {
-                await axios.delete(`${API_URL}/${id}`, getConfig());
-                fetchExpenses();
-            } catch (error) {
-                console.error('Failed to delete expense:', error);
+        const expense = expenses.find(e => e.id === id);
+        if (!expense) return;
+        
+        // Check if expense is already in pending list
+        if (isExpenseIdInPendingList(id)) {
+            alert('This expense is already in pending list.');
+            return;
+        }
+        
+        if (!window.confirm(`Add "${expense.description || expense.category}" to pending deletions?`)) return;
+
+        // Add to pending list instead of direct deletion
+        const newItem = {
+            action: 'delete',
+            name: expense.description || expense.category,
+            data: expense
+        };
+        
+        setPendingItems(prev => [...prev, newItem]);
+        setIsSideListOpen(true);
+    };
+
+    // Check if expense ID already exists in pending list
+    const isExpenseIdInPendingList = (expenseId) => {
+        return pendingItems.some(item => {
+            if (item.action === 'add') {
+                // For new items, check by description or category
+                return item.name.toLowerCase().trim() === expenseId.toLowerCase().trim();
+            } else if (item.action === 'delete') {
+                // For deletions, check by actual ID
+                return item.data.id === expenseId;
             }
+            return false;
+        });
+    };
+
+    // Side List Handlers
+    const handleRemovePendingItem = (index) => {
+        setPendingItems(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleClearAllPending = () => {
+        if (window.confirm('Clear all pending changes?')) {
+            setPendingItems([]);
+        }
+    };
+
+    const handleProcessPendingItems = async () => {
+        if (pendingItems.length === 0) return;
+        
+        if (!window.confirm(`Process ${pendingItems.length} pending changes? This cannot be undone.`)) {
+            return;
+        }
+
+        setIsProcessing(true);
+        let successCount = 0;
+        let errorCount = 0;
+        const errors = [];
+
+        try {
+            // Process items in order
+            for (const item of pendingItems) {
+                try {
+                    if (item.action === 'add') {
+                        await axios.post(API_URL, item.data, getConfig());
+                        successCount++;
+                    } else if (item.action === 'delete') {
+                        await axios.delete(`${API_URL}/${item.data.id}`, getConfig());
+                        successCount++;
+                    }
+                } catch (err) {
+                    errorCount++;
+                    errors.push(`${item.action === 'add' ? 'Adding' : 'Deleting'} "${item.name}": ${err.response?.data?.error || err.message}`);
+                }
+            }
+
+            // Show results
+            if (errorCount > 0) {
+                alert(`Processed ${successCount} items successfully. ${errorCount} items failed:\n\n${errors.join('\n')}`);
+            } else {
+                alert(`Successfully processed ${successCount} items!`);
+            }
+
+            // Clear pending items and refresh expenses
+            setPendingItems([]);
+            setIsSideListOpen(false);
+            fetchExpenses();
+        } catch (err) {
+            console.error('Error processing pending items:', err);
+            alert('An unexpected error occurred while processing items.');
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -98,7 +207,8 @@ const Expenses = () => {
     }, [expenses, searchTerm]);
 
     return (
-        <div className="expenses-container page-container fade-in">
+        <>
+            <div className="expenses-container page-container fade-in">
             <header className="page-header">
                 <div>
                     <h1 className="page-title">Daily Expenses</h1>
@@ -310,7 +420,20 @@ const Expenses = () => {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+
+            {/* Expense Side List */}
+            <ProductSideList
+                isOpen={isSideListOpen}
+                onClose={() => setIsSideListOpen(false)}
+                pendingItems={pendingItems}
+                onRemoveItem={handleRemovePendingItem}
+                onClearAll={handleClearAllPending}
+                onProcessItems={handleProcessPendingItems}
+                isProcessing={isProcessing}
+                entityType="expense"
+            />
+        </>
     );
 };
 
