@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, Plus, MoreVertical, CreditCard, Edit, Trash2, X } from 'lucide-react';
+import ProductSideList from '../components/ProductSideList';
 import './Buyers.css';
 
 const Buyers = () => {
@@ -10,6 +11,11 @@ const Buyers = () => {
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [totalOutstanding, setTotalOutstanding] = useState(0);
+
+    // Side List State
+    const [isSideListOpen, setIsSideListOpen] = useState(false);
+    const [pendingItems, setPendingItems] = useState([]);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -82,17 +88,26 @@ const Buyers = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this customer?')) return;
-        try {
-            const token = localStorage.getItem('inventory_token');
-            await axios.delete(`/api/buyers/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            fetchBuyers();
-        } catch (err) {
-            console.error('Error deleting customer:', err);
-            alert('Failed to delete customer.');
+        const buyer = buyers.find(b => b.id === id);
+        if (!buyer) return;
+        
+        // Check if customer is already in pending list
+        if (isCustomerIdInPendingList(id)) {
+            alert('This customer is already in the pending list.');
+            return;
         }
+        
+        if (!window.confirm(`Add "${buyer.name}" to pending deletions?`)) return;
+
+        // Add to pending list instead of direct deletion
+        const newItem = {
+            action: 'delete',
+            name: buyer.name,
+            data: buyer
+        };
+        
+        setPendingItems(prev => [...prev, newItem]);
+        setIsSideListOpen(true);
     };
 
     const openAddModal = () => {
@@ -158,6 +173,35 @@ const Buyers = () => {
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
+        
+        if (modalMode === 'add') {
+            // Check if customer with same name already exists in pending list
+            if (isCustomerIdInPendingList(formData.name)) {
+                alert('This customer is already in the pending list.');
+                return;
+            }
+            
+            // For new customers, add to pending list instead of direct save
+            const payload = {
+                name: formData.name,
+                phone: formData.phone,
+                address: formData.address,
+                company_name: formData.company_name || null
+            };
+
+            const newItem = {
+                action: 'add',
+                name: formData.name,
+                data: payload
+            };
+            
+            setPendingItems(prev => [...prev, newItem]);
+            setIsSideListOpen(true);
+            closeModal();
+            return;
+        }
+        
+        // For existing customers (edit mode), keep the original logic
         try {
             const token = localStorage.getItem('inventory_token');
             const payload = {
@@ -219,6 +263,84 @@ const Buyers = () => {
         }
     };
 
+    // Check if customer ID already exists in pending list
+    const isCustomerIdInPendingList = (customerId) => {
+        return pendingItems.some(item => {
+            if (item.action === 'add') {
+                // For new items, check by name
+                return item.name.toLowerCase().trim() === customerId.toLowerCase().trim();
+            } else if (item.action === 'delete') {
+                // For deletions, check by actual ID
+                return item.data.id === customerId;
+            }
+            return false;
+        });
+    };
+
+    // Side List Handlers
+    const handleRemovePendingItem = (index) => {
+        setPendingItems(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleClearAllPending = () => {
+        if (window.confirm('Clear all pending changes?')) {
+            setPendingItems([]);
+        }
+    };
+
+    const handleProcessPendingItems = async () => {
+        if (pendingItems.length === 0) return;
+        
+        if (!window.confirm(`Process ${pendingItems.length} pending changes? This cannot be undone.`)) {
+            return;
+        }
+
+        setIsProcessing(true);
+        const token = localStorage.getItem('inventory_token');
+        let successCount = 0;
+        let errorCount = 0;
+        const errors = [];
+
+        try {
+            // Process items in order
+            for (const item of pendingItems) {
+                try {
+                    if (item.action === 'add') {
+                        await axios.post('/api/buyers', item.data, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        successCount++;
+                    } else if (item.action === 'delete') {
+                        await axios.delete(`/api/buyers/${item.data.id}`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        successCount++;
+                    }
+                } catch (err) {
+                    errorCount++;
+                    errors.push(`${item.action === 'add' ? 'Adding' : 'Deleting'} "${item.name}": ${err.response?.data?.error || err.message}`);
+                }
+            }
+
+            // Show results
+            if (errorCount > 0) {
+                alert(`Processed ${successCount} items successfully. ${errorCount} items failed:\n\n${errors.join('\n')}`);
+            } else {
+                alert(`Successfully processed ${successCount} items!`);
+            }
+
+            // Clear pending items and refresh buyers
+            setPendingItems([]);
+            setIsSideListOpen(false);
+            fetchBuyers();
+        } catch (err) {
+            console.error('Error processing pending items:', err);
+            alert('An unexpected error occurred while processing items.');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     const flattenedData = useMemo(() => {
         const filtered = buyers.filter(buyer =>
             buyer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -240,7 +362,8 @@ const Buyers = () => {
     }, [buyers, searchQuery]);
 
     return (
-        <div className="page-container">
+        <>
+            <div className="page-container">
             <div className="page-header">
                 <div>
                     <h1 className="page-title">Customers Directory</h1>
@@ -577,7 +700,20 @@ const Buyers = () => {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+
+            {/* Customer Side List */}
+        <ProductSideList
+            isOpen={isSideListOpen}
+            onClose={() => setIsSideListOpen(false)}
+            pendingItems={pendingItems}
+            onRemoveItem={handleRemovePendingItem}
+            onClearAll={handleClearAllPending}
+            onProcessItems={handleProcessPendingItems}
+            isProcessing={isProcessing}
+            entityType="customer"
+        />
+        </>
     );
 };
 

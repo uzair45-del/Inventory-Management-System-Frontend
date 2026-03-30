@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Search, Plus, MoreVertical, Truck, Edit, Trash2, X } from 'lucide-react';
+import ProductSideList from '../components/ProductSideList';
 import './Suppliers.css';
 
 const Suppliers = () => {
@@ -10,6 +11,11 @@ const Suppliers = () => {
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [totalPayables, setTotalPayables] = useState(0);
+
+    // Side List State
+    const [isSideListOpen, setIsSideListOpen] = useState(false);
+    const [pendingItems, setPendingItems] = useState([]);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -87,17 +93,26 @@ const Suppliers = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this supplier?')) return;
-        try {
-            const token = localStorage.getItem('inventory_token');
-            await axios.delete(`/api/suppliers/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            fetchSuppliers();
-        } catch (err) {
-            console.error('Error deleting supplier:', err);
-            alert('Failed to delete supplier.');
+        const supplier = suppliers.find(s => s.id === id);
+        if (!supplier) return;
+        
+        // Check if supplier is already in pending list
+        if (isSupplierIdInPendingList(id)) {
+            alert('This supplier is already in the pending list.');
+            return;
         }
+        
+        if (!window.confirm(`Add "${supplier.name}" to pending deletions?`)) return;
+
+        // Add to pending list instead of direct deletion
+        const newItem = {
+            action: 'delete',
+            name: supplier.name,
+            data: supplier
+        };
+        
+        setPendingItems(prev => [...prev, newItem]);
+        setIsSideListOpen(true);
     };
 
     const openAddModal = () => {
@@ -215,6 +230,34 @@ const Suppliers = () => {
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
+        
+        if (modalMode === 'add') {
+            // Check if supplier with same name already exists in pending list
+            if (isSupplierIdInPendingList(formData.name)) {
+                alert('This supplier is already in the pending list.');
+                return;
+            }
+            
+            // For new suppliers, add to pending list instead of direct save
+            const payload = {
+                name: formData.name,
+                phone: formData.phone,
+                company_name: formData.company_name
+            };
+
+            const newItem = {
+                action: 'add',
+                name: formData.name,
+                data: payload
+            };
+            
+            setPendingItems(prev => [...prev, newItem]);
+            setIsSideListOpen(true);
+            closeModal();
+            return;
+        }
+        
+        // For existing suppliers (edit mode), keep the original logic
         try {
             const token = localStorage.getItem('inventory_token');
             const payload = {
@@ -347,6 +390,84 @@ const Suppliers = () => {
         }
     };
 
+    // Check if supplier ID already exists in pending list
+    const isSupplierIdInPendingList = (supplierId) => {
+        return pendingItems.some(item => {
+            if (item.action === 'add') {
+                // For new items, check by name
+                return item.name.toLowerCase().trim() === supplierId.toLowerCase().trim();
+            } else if (item.action === 'delete') {
+                // For deletions, check by actual ID
+                return item.data.id === supplierId;
+            }
+            return false;
+        });
+    };
+
+    // Side List Handlers
+    const handleRemovePendingItem = (index) => {
+        setPendingItems(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleClearAllPending = () => {
+        if (window.confirm('Clear all pending changes?')) {
+            setPendingItems([]);
+        }
+    };
+
+    const handleProcessPendingItems = async () => {
+        if (pendingItems.length === 0) return;
+        
+        if (!window.confirm(`Process ${pendingItems.length} pending changes? This cannot be undone.`)) {
+            return;
+        }
+
+        setIsProcessing(true);
+        const token = localStorage.getItem('inventory_token');
+        let successCount = 0;
+        let errorCount = 0;
+        const errors = [];
+
+        try {
+            // Process items in order
+            for (const item of pendingItems) {
+                try {
+                    if (item.action === 'add') {
+                        await axios.post('/api/suppliers', item.data, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        successCount++;
+                    } else if (item.action === 'delete') {
+                        await axios.delete(`/api/suppliers/${item.data.id}`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                        successCount++;
+                    }
+                } catch (err) {
+                    errorCount++;
+                    errors.push(`${item.action === 'add' ? 'Adding' : 'Deleting'} "${item.name}": ${err.response?.data?.error || err.message}`);
+                }
+            }
+
+            // Show results
+            if (errorCount > 0) {
+                alert(`Processed ${successCount} items successfully. ${errorCount} items failed:\n\n${errors.join('\n')}`);
+            } else {
+                alert(`Successfully processed ${successCount} items!`);
+            }
+
+            // Clear pending items and refresh suppliers
+            setPendingItems([]);
+            setIsSideListOpen(false);
+            fetchSuppliers();
+        } catch (err) {
+            console.error('Error processing pending items:', err);
+            alert('An unexpected error occurred while processing items.');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     const filteredSuppliers = suppliers.filter(supplier =>
         supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (supplier.company_name && supplier.company_name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -367,7 +488,8 @@ const Suppliers = () => {
         }
     });
     return (
-        <div className="page-container">
+        <>
+            <div className="page-container">
             <div className="page-header">
                 <div>
                     <h1 className="page-title">Suppliers Directory</h1>
@@ -754,7 +876,20 @@ const Suppliers = () => {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+
+            {/* Supplier Side List */}
+        <ProductSideList
+            isOpen={isSideListOpen}
+            onClose={() => setIsSideListOpen(false)}
+            pendingItems={pendingItems}
+            onRemoveItem={handleRemovePendingItem}
+            onClearAll={handleClearAllPending}
+            onProcessItems={handleProcessPendingItems}
+            isProcessing={isProcessing}
+            entityType="supplier"
+        />
+        </>
     );
 };
 
