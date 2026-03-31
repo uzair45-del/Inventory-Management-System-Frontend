@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Download, FileText, Package, Truck, Target, CreditCard, Filter } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
+import CustomDatePicker from '../components/CustomDatePicker';
 import './Expenses.css'; // borrowing standard page styles
 import './Reports.css'; // Premium analytics styling
 
@@ -168,16 +169,11 @@ const DailyReport = () => {
                     {/* Modern Glass Date Picker */}
                     <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', padding: '8px 16px', borderRadius: '12px', gap: '12px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Select Date</span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <input 
-                                    type="date"
-                                    className="input-field minimal-select"
-                                    value={reportDate}
-                                    onChange={(e) => setReportDate(e.target.value)}
-                                    style={{ padding: '4px 8px', minWidth: '130px', background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: '600', outline: 'none' }}
-                                />
-                            </div>
+                            <CustomDatePicker
+                                value={reportDate}
+                                onChange={setReportDate}
+                                className="report-date-picker"
+                            />
                         </div>
                     </div>
                     

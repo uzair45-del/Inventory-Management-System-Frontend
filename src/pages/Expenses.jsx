@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Plus, Edit2, Trash2, Search, DollarSign, X } from 'lucide-react';
 import CustomDropdown from '../components/CustomDropdown';
+import CustomDatePicker from '../components/CustomDatePicker';
 import './Expenses.css'; // We'll create a generic css or reuse styles
 
 const API_URL = '/api/expenses';
@@ -14,10 +15,9 @@ const Expenses = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     // Separate state for Year and Month
-    const currentYearStr = new Date().getFullYear().toString();
-    const currentMonthStr = (new Date().getMonth() + 1).toString().padStart(2, '0');
-    const [filterYear, setFilterYear] = useState(currentYearStr);
-    const [filterMonth, setFilterMonth] = useState(currentMonthStr);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const filterMonth = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const filterYear = selectedDate.getFullYear();
 
     // Auth token configuration
     const getConfig = () => ({
@@ -124,45 +124,12 @@ const Expenses = () => {
                 </div>
 
                 <div className="filter-group" style={{ display: 'flex', gap: '10px' }}>
-                    <div className="month-filter">
-                        <label style={{ color: 'var(--text-secondary)', marginRight: '10px', fontSize: '0.9rem' }}>Year:</label>
-                        <CustomDropdown
-                            value={filterYear}
-                            onChange={(e) => setFilterYear(e.target.value)}
-                            className="minimal-select"
-                            style={{ width: '100px', padding: '0px' }}
-                            options={[
-                                { value: '2024', label: '2024' },
-                                { value: '2025', label: '2025' },
-                                { value: '2026', label: '2026' },
-                                { value: '2027', label: '2027' }
-                            ]}
-                        />
-                    </div>
-
-                    <div className="month-filter">
-                        <label style={{ color: 'var(--text-secondary)', marginRight: '10px', fontSize: '0.9rem' }}>Month:</label>
-                        <CustomDropdown
-                            value={filterMonth}
-                            onChange={(e) => setFilterMonth(e.target.value)}
-                            className="minimal-select"
-                            style={{ width: '130px', padding: '0px' }}
-                            options={[
-                                { value: '01', label: 'January' },
-                                { value: '02', label: 'February' },
-                                { value: '03', label: 'March' },
-                                { value: '04', label: 'April' },
-                                { value: '05', label: 'May' },
-                                { value: '06', label: 'June' },
-                                { value: '07', label: 'July' },
-                                { value: '08', label: 'August' },
-                                { value: '09', label: 'September' },
-                                { value: '10', label: 'October' },
-                                { value: '11', label: 'November' },
-                                { value: '12', label: 'December' }
-                            ]}
-                        />
-                    </div>
+                    <CustomDatePicker
+                        value={selectedDate.toISOString().split('T')[0]}
+                        onChange={(value) => setSelectedDate(new Date(value))}
+                        label="SELECT DATE"
+                        className="expense-filter-date-picker"
+                    />
                 </div>
             </div>
 
@@ -172,7 +139,7 @@ const Expenses = () => {
                         <DollarSign size={28} />
                     </div>
                     <div>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '5px' }}>Total Expenses ({filterMonth}-{filterYear})</p>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '5px' }}>Total Expenses ({selectedDate.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })})</p>
                         <h3 style={{ fontSize: '1.8rem', color: 'var(--text-primary)', margin: 0 }}>Rs. {totalExpenses.toLocaleString()}</h3>
                     </div>
                 </div>
@@ -239,14 +206,11 @@ const Expenses = () => {
                             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                     <div className="input-group" style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: '6px' }}>Date</label>
-                                        <input
-                                            type="date"
-                                            className="input-field"
-                                            style={{ width: '100%' }}
+                                        <CustomDatePicker
                                             value={currentExpense.date}
-                                            onChange={e => setCurrentExpense({ ...currentExpense, date: e.target.value })}
-                                            required
+                                            onChange={(value) => setCurrentExpense({ ...currentExpense, date: value })}
+                                            
+                                            className="expense-date-picker"
                                         />
                                     </div>
 

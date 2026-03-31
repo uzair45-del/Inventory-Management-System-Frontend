@@ -3,6 +3,7 @@ import axios from 'axios';
 import html2pdf from 'html2pdf.js';
 import { RefreshCw, TrendingUp, TrendingDown, DollarSign, Wallet, Users, Truck, AlertTriangle, Building2, Banknote, Download } from 'lucide-react';
 import CustomDropdown from '../components/CustomDropdown';
+import CustomDatePicker from '../components/CustomDatePicker';
 import './MonthlyReport.css'; // Optional generic modern styling
 import './Reports.css'; // Premium analytics styling
 
@@ -11,13 +12,15 @@ const API_URL = '/api/reports/monthly';
 const MonthlyReport = () => {
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(true);
-    // Separate state for Year and Month
-    const currentYearStr = new Date().getFullYear().toString();
-    const currentMonthStr = (new Date().getMonth() + 1).toString().padStart(2, '0');
-    const [filterYear, setFilterYear] = useState(currentYearStr);
-    const [filterMonth, setFilterMonth] = useState(currentMonthStr);
+    // Use single date state for month and year
+    const currentDate = new Date();
+    const [selectedDate, setSelectedDate] = useState(currentDate.toISOString().split('T')[0]);
     const [viewMode, setViewMode] = useState('overview'); // 'overview' | 'daily_summary'
     const reportRef = useRef();
+
+    // Extract month and year from selected date
+    const filterYear = new Date(selectedDate).getFullYear().toString();
+    const filterMonth = String(new Date(selectedDate).getMonth() + 1).padStart(2, '0');
 
     useEffect(() => {
         fetchReport();
@@ -104,51 +107,13 @@ const MonthlyReport = () => {
                     <p className="page-subtitle">Complete overview of your business health</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {/* Month selector */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Month</span>
-                        <div style={{ position: 'relative' }}>
-                            <CustomDropdown
-                                value={filterMonth}
-                                onChange={(e) => setFilterMonth(e.target.value)}
-                                className="minimal-select"
-                                style={{ minWidth: '160px' }}
-                                options={[
-                                    { value: '01', label: 'January' },
-                                    { value: '02', label: 'February' },
-                                    { value: '03', label: 'March' },
-                                    { value: '04', label: 'April' },
-                                    { value: '05', label: 'May' },
-                                    { value: '06', label: 'June' },
-                                    { value: '07', label: 'July' },
-                                    { value: '08', label: 'August' },
-                                    { value: '09', label: 'September' },
-                                    { value: '10', label: 'October' },
-                                    { value: '11', label: 'November' },
-                                    { value: '12', label: 'December' }
-                                ]}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Year selector */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Year</span>
-                        <div style={{ position: 'relative' }}>
-                            <CustomDropdown
-                                value={filterYear}
-                                onChange={(e) => setFilterYear(e.target.value)}
-                                className="minimal-select"
-                                style={{ minWidth: '120px' }}
-                                options={[
-                                    { value: '2024', label: '2024' },
-                                    { value: '2025', label: '2025' },
-                                    { value: '2026', label: '2026' },
-                                    { value: '2027', label: '2027' }
-                                ]}
-                            />
-                        </div>
-                    </div>
+                    {/* Date selector */}
+                    <CustomDatePicker
+                        value={selectedDate}
+                        onChange={setSelectedDate}
+                        label="SELECT DATE"
+                        className="monthly-report-date-picker"
+                    />
                     
                     {/* View Toggle */}
                     <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', padding: '4px', borderRadius: '12px', background: 'var(--bg-secondary)' }}>
@@ -184,7 +149,7 @@ const MonthlyReport = () => {
                     <h1 style={{ fontSize: '1.8rem', color: 'var(--text-primary)', margin: '0 0 8px' }}>
                         {viewMode === 'overview' ? 'Monthly Summary' : 'Day-by-Day Monthly Summary'}
                     </h1>
-                    <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', margin: 0 }}>Period: <strong>{filterMonth}/{filterYear}</strong></p>
+                    <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', margin: 0 }}>Period: <strong>{new Date(selectedDate).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</strong></p>
                 </div>
 
                 {/* OVERVIEW MODE */}

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, Plus, MoreVertical, CreditCard, Edit, Trash2, X } from 'lucide-react';
 import ProductSideList from '../components/ProductSideList';
+import CustomDatePicker from '../components/CustomDatePicker';
 import './Buyers.css';
 
 const Buyers = () => {
@@ -635,13 +636,11 @@ const Buyers = () => {
                                     </div>
 
                                     <div className="input-group">
-                                        <label>Purchase Date</label>
-                                        <input
-                                            type="date"
-                                            className="input-field"
-                                            name="purchase_date"
+                                        <CustomDatePicker
                                             value={formData.purchase_date}
-                                            onChange={handleFormChange}
+                                            onChange={(value) => setFormData({ ...formData, purchase_date: value })}
+                                            label="Purchase Date"
+                                            className="purchase-date-picker"
                                         />
                                     </div>
                                 </>
@@ -668,21 +667,17 @@ const Buyers = () => {
                                                 <input
                                                     type="number"
                                                     className="input-field"
-                                                    style={{ flex: 1 }}
                                                     name="add_payment"
                                                     value={formData.add_payment}
                                                     onChange={handleFormChange}
                                                     min="0"
-                                                    max={formData.remaining_amount}
                                                     placeholder="Amount to pay..."
                                                 />
-                                                <input
-                                                    type="date"
-                                                    className="input-field"
-                                                    style={{ width: '140px' }}
-                                                    name="payment_date"
+                                                <CustomDatePicker
                                                     value={formData.payment_date}
-                                                    onChange={handleFormChange}
+                                                    onChange={(value) => setFormData({ ...formData, payment_date: value })}
+                                                    label="Payment Date"
+                                                    className="payment-date-picker"
                                                 />
                                             </div>
                                         </div>

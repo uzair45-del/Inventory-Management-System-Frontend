@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, Plus, Package, SlidersHorizontal, Edit, Trash2, X } from 'lucide-react';
 import CustomDropdown from '../components/CustomDropdown';
+import CustomDatePicker from '../components/CustomDatePicker';
 import ProductSideList from '../components/ProductSideList';
 import './Products.css';
 
@@ -793,8 +794,12 @@ const Products = () => {
                                                 <input type="number" className="input-field" name="restock_paid_amount" value={formData.restock_paid_amount} onChange={handleFormChange} min="0" placeholder="0" />
                                             </div>
                                             <div className="input-group">
-                                                <label>Batch date</label>
-                                                <input type="date" className="input-field" name="restock_purchase_date" value={formData.restock_purchase_date} onChange={handleFormChange} />
+                                                <CustomDatePicker
+                                                    value={formData.restock_purchase_date}
+                                                    onChange={(value) => setFormData(prev => ({ ...prev, restock_purchase_date: value }))}
+                                                    label="Batch date"
+                                                    className="batch-date-picker"
+                                                />
                                             </div>
                                         </div>
                                     </div>
