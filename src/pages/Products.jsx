@@ -474,7 +474,7 @@ const Products = () => {
         setIsSideListOpen(!isSideListOpen);
     };
 
-    const categories = ['All', 'Paint', 'Electric', 'Hardware', 'Out of Stock'];
+    const categories = ['All', 'Paint', 'Electric', 'Hardware', 'Low Stock', 'Out of Stock'];
 
     return (
         <div className="page-container">
