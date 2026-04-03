@@ -79,7 +79,33 @@ const Companies = () => {
 
         const list = Object.entries(cMap)
             .filter(([name]) => name.toLowerCase().includes(searchQuery.toLowerCase()))
-            .sort(([a], [b]) => a.localeCompare(b));
+            .sort(([a, aData], [b, bData]) => {
+                // Calculate remaining amounts for both companies
+                const aTotals = aData.txns.reduce((acc, txn) => {
+                    acc.total += Number(txn.total_amount || 0);
+                    acc.paid += Number(txn.paid_amount || 0);
+                    return acc;
+                }, { total: 0, paid: 0 });
+                
+                const bTotals = bData.txns.reduce((acc, txn) => {
+                    acc.total += Number(txn.total_amount || 0);
+                    acc.paid += Number(txn.paid_amount || 0);
+                    return acc;
+                }, { total: 0, paid: 0 });
+                
+                const aRemaining = aTotals.total - aTotals.paid;
+                const bRemaining = bTotals.total - bTotals.paid;
+                
+                // If one has outstanding and other doesn't, outstanding comes first
+                if (aRemaining > 0 && bRemaining <= 0) return -1;
+                if (aRemaining <= 0 && bRemaining > 0) return 1;
+                
+                // If both have outstanding, sort by higher outstanding amount
+                if (aRemaining > 0 && bRemaining > 0) return bRemaining - aRemaining;
+                
+                // If both are cleared, sort alphabetically
+                return a.localeCompare(b);
+            });
 
         let gTotal = 0, gPaid = 0;
         Object.values(cMap).forEach(({ txns }) => {
