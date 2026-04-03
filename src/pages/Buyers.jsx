@@ -409,11 +409,10 @@ const Buyers = () => {
                     </div>
                 </div>
 
-                <div className="table-wrapper">
-                    {loading ? (
-                        <div className="loading-state text-center py-8">Loading customers...</div>
-                    ) : (
-                        <table className="custom-table">
+                {loading ? (
+                    <div className="loading-state text-center py-8">Loading customers...</div>
+                ) : (
+                    <table className="custom-table">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -510,7 +509,6 @@ const Buyers = () => {
                             </tbody>
                         </table>
                     )}
-                </div>
             </ScrollableTable>
 
             {/* Modal for Add / Edit */}
