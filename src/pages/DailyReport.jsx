@@ -378,6 +378,7 @@ const DailyReport = () => {
                                                 <th>Qty</th>
                                                 <th>Total Amount</th>
                                                 <th>Paid Amount</th>
+                                                <th>Method</th>
                                                 <th>Condition</th>
                                             </tr>
                                         </thead>
@@ -395,6 +396,18 @@ const DailyReport = () => {
                                                         <td>{sale.quantity}</td>
                                                         <td style={{ fontWeight: 600 }}>Rs. {total.toLocaleString()}</td>
                                                         <td style={{ color: 'var(--success)', fontWeight: 600 }}>Rs. {paid.toLocaleString()}</td>
+                                                        <td>
+                                                            <span style={{ 
+                                                                fontSize: '0.8em', padding: '2px 6px', borderRadius: '4px', fontWeight: 600,
+                                                                background: sale.payment_method === 'Online' ? 'rgba(56,189,248,0.15)' : (sale.payment_method === 'Split' ? 'rgba(234,179,8,0.15)' : 'rgba(34,197,94,0.15)'),
+                                                                color: sale.payment_method === 'Online' ? '#0369a1' : (sale.payment_method === 'Split' ? '#b45309' : '#166534')
+                                                            }}>{sale.payment_method || 'Cash'}</span>
+                                                            {sale.payment_method === 'Split' && (
+                                                                <div style={{ fontSize: '0.7em', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                                                    C: {sale.cash_amount} | O: {sale.online_amount}
+                                                                </div>
+                                                            )}
+                                                        </td>
                                                         <td>
                                                             {credit > 0 ? (
                                                                 <span style={{ color: 'var(--danger)', fontWeight: 600, background: 'rgba(239, 68, 68, 0.15)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.85rem' }}>

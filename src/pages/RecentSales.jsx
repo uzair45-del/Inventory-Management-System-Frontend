@@ -252,6 +252,7 @@ const RecentSales = () => {
                                 <th>Qty</th>
                                 <th>Total Amount</th>
                                 <th>Paid</th>
+                                <th>Method</th>
                                 <th>Pending</th>
                                 <th>Salesman</th>
                                 <th>Action</th>
@@ -278,6 +279,18 @@ const RecentSales = () => {
                                         <td>{sale.quantity} {sale.products?.quantity_unit ? `\n(${sale.products.quantity_unit})` : ''}</td>
                                         <td>Rs. {Number(sale.total_amount).toLocaleString()}</td>
                                         <td style={{ color: '#22c55e' }}>Rs. {Number(sale.paid_amount).toLocaleString()}</td>
+                                        <td>
+                                            <span style={{ 
+                                                fontSize: '0.75em', padding: '3px 6px', borderRadius: '4px', fontWeight: 600,
+                                                background: sale.payment_method === 'Online' ? '#e0f2fe' : (sale.payment_method === 'Split' ? '#fef08a' : '#dcfce3'),
+                                                color: sale.payment_method === 'Online' ? '#0369a1' : (sale.payment_method === 'Split' ? '#854d0e' : '#166534')
+                                            }}>{sale.payment_method || 'Cash'}</span>
+                                            {sale.payment_method === 'Split' && (
+                                                <div style={{ fontSize: '0.65em', color: '#666', marginTop: '4px' }}>
+                                                    C: {sale.cash_amount} | O: {sale.online_amount}
+                                                </div>
+                                            )}
+                                        </td>
                                         <td style={{ color: pending > 0 ? '#ef4444' : '#22c55e', fontWeight: 600 }}>
                                             {pending > 0 ? `Rs. ${pending.toLocaleString()}` : '✓ Paid'}
                                         </td>

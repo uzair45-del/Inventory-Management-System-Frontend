@@ -424,6 +424,7 @@ const Buyers = () => {
                                     <th>Qty</th>
                                     <th>Total Amt</th>
                                     <th>Paid Amt</th>
+                                    <th>Method</th>
                                     <th>Remaining (Credit)</th>
                                     <th>Actions</th>
                                 </tr>
@@ -459,6 +460,13 @@ const Buyers = () => {
                                                     <td>{txn.quantity}</td>
                                                     <td>Rs. {txn.total_amount}</td>
                                                     <td>Rs. {txn.paid_amount}</td>
+                                                    <td>
+                                                        <span style={{ 
+                                                            fontSize: '0.8em', padding: '2px 6px', borderRadius: '4px', fontWeight: 600,
+                                                            background: txn.payment_method === 'Online' ? 'rgba(56,189,248,0.15)' : (txn.payment_method === 'Split' ? 'rgba(234,179,8,0.15)' : 'rgba(34,197,94,0.15)'),
+                                                            color: txn.payment_method === 'Online' ? '#38bdf8' : (txn.payment_method === 'Split' ? '#facc15' : '#4ade80')
+                                                        }}>{txn.payment_method || 'Cash'}</span>
+                                                    </td>
                                                     <td>
                                                         <span className={`qty-badge ${remainingAmount > 0 ? 'low-stock' : 'in-stock'}`}>
                                                             Rs. {remainingAmount}

@@ -26,6 +26,11 @@ const Billing = () => {
     const [buyerPhone, setBuyerPhone] = useState('');
     const [paidAmount, setPaidAmount] = useState('');
 
+    // Payment method fields
+    const [paymentMethod, setPaymentMethod] = useState('Cash');
+    const [cashAmount, setCashAmount] = useState('');
+    const [onlineAmount, setOnlineAmount] = useState('');
+
     const receiptRef = useRef();
 
     const handleDownloadPdf = async () => {
@@ -165,6 +170,31 @@ const Billing = () => {
             return;
         }
 
+        const targetPaidAmount = billType === 'credit' ? Number(paidAmount || 0) : total;
+        let finalCashAmount = 0;
+        let finalOnlineAmount = 0;
+
+        if (paymentMethod === 'Cash') {
+            finalCashAmount = targetPaidAmount;
+        } else if (paymentMethod === 'Online') {
+            finalOnlineAmount = targetPaidAmount;
+        } else if (paymentMethod === 'Split') {
+            if (!cashAmount || Number(cashAmount) <= 0) {
+                notifyError('Please enter a valid Cash Amount for the split payment.');
+                return;
+            }
+            if (Number(cashAmount) >= targetPaidAmount) {
+                notifyError('Cash Amount must be less than the total paid amount for a split payment.');
+                return;
+            }
+            finalCashAmount = Number(cashAmount || 0);
+            finalOnlineAmount = Number(onlineAmount || 0);
+            if (targetPaidAmount > 0 && Math.abs((finalCashAmount + finalOnlineAmount) - targetPaidAmount) > 1) {
+                notifyError(`Split amounts (${finalCashAmount} + ${finalOnlineAmount} = ${finalCashAmount + finalOnlineAmount}) must equal the paid amount (${targetPaidAmount}).`);
+                return;
+            }
+        }
+
         // ===== CREDIT VALIDATION =====
         if (billType === 'credit' && (!customerName.trim() || !buyerPhone.trim())) {
             notifyError('Credit bill requires Customer Name and Phone.');
@@ -194,8 +224,38 @@ const Billing = () => {
             const userPaid = billType === 'credit' ? Number(paidAmount || 0) : null;
             const lowStockAlerts = [];
 
-            for (const item of cart) {
+            let currentCashPool = finalCashAmount;
+            let currentOnlinePool = finalOnlineAmount;
+
+            for (let i = 0; i < cart.length; i++) {
+                const item = cart[i];
                 const itemTotal = item.price * item.quantity;
+                const isLastItem = i === cart.length - 1;
+
+                let itemPaidAmount;
+                if (billType === 'credit') {
+                    const ratio = total > 0 ? (itemTotal / total) : 0;
+                    itemPaidAmount = isLastItem 
+                        ? (userPaid - cart.slice(0, i).reduce((s, it) => s + Math.round((it.price * it.quantity / total) * userPaid), 0))
+                        : Math.round(ratio * userPaid);
+                } else {
+                    itemPaidAmount = itemTotal;
+                }
+
+                let thisCash = 0;
+                let thisOnline = 0;
+                if (paymentMethod === 'Split') {
+                     const ratio = targetPaidAmount > 0 ? (itemPaidAmount / targetPaidAmount) : 0;
+                     thisCash = isLastItem ? currentCashPool : Math.round(ratio * finalCashAmount);
+                     thisOnline = isLastItem ? currentOnlinePool : Math.round(ratio * finalOnlineAmount);
+                     currentCashPool -= thisCash;
+                     currentOnlinePool -= thisOnline;
+                } else if (paymentMethod === 'Cash') {
+                     thisCash = itemPaidAmount;
+                } else if (paymentMethod === 'Online') {
+                     thisOnline = itemPaidAmount;
+                }
+
                 const saleData = {
                     product_id: item.id,
                     quantity: item.quantity,
@@ -204,8 +264,11 @@ const Billing = () => {
                     buyer_id: buyerId,
                     buyer_name: customerName || 'Cash Walk-in Customer',
                     company_name: companyName || null,
-                    paid_amount: billType === 'credit' ? userPaid : itemTotal,
-                    quantity_unit: item.cart_unit
+                    paid_amount: itemPaidAmount,
+                    quantity_unit: item.cart_unit,
+                    payment_method: paymentMethod,
+                    cash_amount: thisCash,
+                    online_amount: thisOnline
                 };
 
                 await axios.post('/api/sales', saleData, {
@@ -237,6 +300,8 @@ const Billing = () => {
             setCompanyName('');
             setBuyerPhone('');
             setPaidAmount('');
+            setCashAmount('');
+            setOnlineAmount('');
             fetchProducts();
             fetchCustomers();
         } catch (err) {
@@ -403,6 +468,52 @@ const Billing = () => {
                                 </div>
                             </div>
                         </>
+                    )}
+
+                    {/* Payment Method section (for Original or Credit bills) */}
+                    {billType !== 'quotation' && (
+                        <div className="form-grid" style={{ marginTop: '16px' }}>
+                            <div className="input-group">
+                                <label>Payment Method</label>
+                                <CustomDropdown
+                                    className="minimal-select"
+                                    value={paymentMethod}
+                                    onChange={(e) => setPaymentMethod(e.target.value)}
+                                    options={[
+                                        { value: 'Cash', label: 'Cash' },
+                                        { value: 'Online', label: 'Online (Easypaisa/Jazzcash)' },
+                                        { value: 'Split', label: 'Split (Cash + Online)' }
+                                    ]}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {billType !== 'quotation' && paymentMethod === 'Split' && (
+                        <div className="form-grid" style={{ marginTop: '16px', background: 'rgba(56, 189, 248, 0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.1)' }}>
+                            <div className="input-group">
+                                <label>Cash Paid (Rs)</label>
+                                <input
+                                    type="number"
+                                    className="input-field"
+                                    placeholder="Enter cash amount"
+                                    min="0"
+                                    value={cashAmount}
+                                    onChange={(e) => setCashAmount(e.target.value)}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>Online Paid (Rs)</label>
+                                <input
+                                    type="number"
+                                    className="input-field"
+                                    placeholder="Enter online amount"
+                                    min="0"
+                                    value={onlineAmount}
+                                    onChange={(e) => setOnlineAmount(e.target.value)}
+                                />
+                            </div>
+                        </div>
                     )}
 
                     <div className="divider"></div>
@@ -651,6 +762,28 @@ const Billing = () => {
                             <span>Total Amount</span>
                             <span>Rs. {total.toLocaleString()}</span>
                         </div>
+
+                        {billType !== 'quotation' && (
+                            <>
+                                <div className="summary-row" style={{ marginTop: '10px' }}>
+                                    <span>Method</span>
+                                    <span style={{ fontWeight: 600 }}>{paymentMethod === 'Split' ? 'Split (Cash+Online)' : paymentMethod}</span>
+                                </div>
+                                {paymentMethod === 'Split' && (
+                                    <>
+                                        <div className="summary-row" style={{ fontSize: '0.85rem' }}>
+                                            <span>Cash Paid</span>
+                                            <span>Rs. {Number(cashAmount || 0).toLocaleString()}</span>
+                                        </div>
+                                        <div className="summary-row" style={{ fontSize: '0.85rem' }}>
+                                            <span>Online Paid</span>
+                                            <span>Rs. {Number(onlineAmount || 0).toLocaleString()}</span>
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                        )}
+
                         {billType === 'credit' && (
                             <>
                                 <div className="summary-row">

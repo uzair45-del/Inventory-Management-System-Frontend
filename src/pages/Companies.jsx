@@ -261,6 +261,7 @@ const Companies = () => {
                                                                 <th>Qty</th>
                                                                 <th>Total</th>
                                                                 <th>Paid</th>
+                                                                <th>Method</th>
                                                                 <th>Remaining</th>
                                                                 <th>Date</th>
                                                                 <th>Action</th>
@@ -289,6 +290,13 @@ const Companies = () => {
                                                                         <td>{txn.quantity}</td>
                                                                         <td>Rs. {Number(txn.total_amount).toLocaleString()}</td>
                                                                         <td style={{ color: '#4ade80' }}>Rs. {Number(txn.paid_amount).toLocaleString()}</td>
+                                                                        <td>
+                                                                            <span style={{ 
+                                                                                fontSize: '0.75em', padding: '2px 5px', borderRadius: '4px', fontWeight: 600,
+                                                                                background: txn.payment_method === 'Online' ? 'rgba(56,189,248,0.2)' : (txn.payment_method === 'Split' ? 'rgba(234,179,8,0.2)' : 'rgba(74,222,128,0.2)'),
+                                                                                color: txn.payment_method === 'Online' ? '#38bdf8' : (txn.payment_method === 'Split' ? '#facc15' : '#4ade80')
+                                                                            }}>{txn.payment_method || 'Cash'}</span>
+                                                                        </td>
                                                                         <td>
                                                                             <span className={`qty-badge ${rem > 0 ? 'low-stock' : 'in-stock'}`}>
                                                                                 Rs. {rem.toLocaleString()}
