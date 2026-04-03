@@ -501,27 +501,15 @@ const Products = () => {
                     />
                 </div>
 
-                <div className="category-tabs flex-1" style={{ display: 'flex', gap: '10px', marginLeft: '20px' }}>
-                    {categories.map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => setActiveCategory(cat)}
-                            className={`category-tab ${activeCategory === cat ? 'active' : ''}`}
-                            style={{
-                                padding: '6px 16px',
-                                borderRadius: '20px',
-                                border: 'none',
-                                backgroundColor: activeCategory === cat ? 'var(--text-primary)' : 'transparent',
-                                color: activeCategory === cat ? 'var(--bg-primary)' : 'var(--text-muted)',
-                                boxShadow: activeCategory === cat ? 'var(--shadow-sm)' : 'none',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                fontWeight: activeCategory === cat ? '600' : '500'
-                            }}
-                        >
-                            {cat}
-                        </button>
-                    ))}
+                <div className="flex-1" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '20px' }}>
+                    <span style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', fontWeight: 500, whiteSpace: 'nowrap' }}>Category:</span>
+                    <CustomDropdown
+                        className="minimal-select"
+                        style={{ minWidth: '150px' }}
+                        value={activeCategory}
+                        onChange={(e) => setActiveCategory(e.target.value)}
+                        options={categories.map(cat => ({ value: cat, label: cat }))}
+                    />
                 </div>
 
                 <div style={{ marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
