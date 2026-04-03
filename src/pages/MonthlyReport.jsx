@@ -5,6 +5,7 @@ import { RefreshCw, TrendingUp, TrendingDown, DollarSign, Wallet, Users, Truck, 
 import CustomDropdown from '../components/CustomDropdown';
 import CustomDatePicker from '../components/CustomDatePicker';
 import { notifyError } from '../utils/notifications';
+import ScrollableTable from '../components/ScrollableTable';
 import './MonthlyReport.css'; // Optional generic modern styling
 import './Reports.css'; // Premium analytics styling
 
@@ -279,6 +280,7 @@ const MonthlyReport = () => {
                                         <p>No cash sales recorded this month.</p>
                                     </div>
                                 ) : (
+                                    <ScrollableTable className="premium-table-wrap">
                                     <table className="premium-table">
                                         <thead>
                                             <tr>
@@ -307,6 +309,7 @@ const MonthlyReport = () => {
                                             </tr>
                                         </tbody>
                                     </table>
+                                    </ScrollableTable>
                                 )}
                             </div>
 
@@ -320,6 +323,7 @@ const MonthlyReport = () => {
                                         <p>No credit payments received this month.</p>
                                     </div>
                                 ) : (
+                                    <ScrollableTable className="premium-table-wrap">
                                     <table className="premium-table">
                                         <thead>
                                             <tr>
@@ -338,6 +342,7 @@ const MonthlyReport = () => {
                                             ))}
                                         </tbody>
                                     </table>
+                                    </ScrollableTable>
                                 )}
                             </div>
                         </div>
@@ -394,6 +399,7 @@ const MonthlyReport = () => {
                                         <p>No payments to suppliers this month.</p>
                                     </div>
                                 ) : (
+                                    <ScrollableTable className="premium-table-wrap">
                                     <table className="premium-table">
                                         <thead>
                                             <tr>
@@ -410,6 +416,7 @@ const MonthlyReport = () => {
                                             ))}
                                         </tbody>
                                     </table>
+                                    </ScrollableTable>
                                 )}
                             </div>
                         </div>
@@ -426,6 +433,7 @@ const MonthlyReport = () => {
                                 <p>No sales recorded this month.</p>
                             </div>
                         ) : (
+                            <ScrollableTable className="premium-table-wrap">
                             <table className="premium-table">
                                 <thead>
                                     <tr>
@@ -473,6 +481,7 @@ const MonthlyReport = () => {
                                     </tr>
                                 </tfoot>
                             </table>
+                            </ScrollableTable>
                         )}
                     </div>
 
@@ -486,6 +495,7 @@ const MonthlyReport = () => {
                                 <p style={{ color: 'var(--success)', fontWeight: '500' }}>Great! No pending dues from any customers.</p>
                             </div>
                         ) : (
+                            <ScrollableTable className="premium-table-wrap">
                             <table className="premium-table">
                                 <thead>
                                     <tr>
@@ -506,6 +516,7 @@ const MonthlyReport = () => {
                                     ))}
                                 </tbody>
                             </table>
+                            </ScrollableTable>
                         )}
                     </div>
                 </div> {/* End OVERVIEW MODE */}
@@ -521,6 +532,7 @@ const MonthlyReport = () => {
                                 <p style={{ color: 'var(--text-muted)' }}>No activity recorded for this month.</p>
                             </div>
                         ) : (
+                            <ScrollableTable className="premium-table-wrap">
                             <table className="premium-table">
                                 <thead>
                                     <tr>
@@ -582,6 +594,7 @@ const MonthlyReport = () => {
                                     </tr>
                                 </tfoot>
                             </table>
+                            </ScrollableTable>
                         )}
                     </div>
                 )}

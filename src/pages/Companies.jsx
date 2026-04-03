@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, Building2, CreditCard, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { notifySuccess, notifyError } from '../utils/notifications';
+import ScrollableTable from '../components/ScrollableTable';
 import './Companies.css';
 
 const Companies = () => {
@@ -251,7 +252,7 @@ const Companies = () => {
                                             {txns.length === 0 ? (
                                                 <div className="text-center py-4 text-muted">No transactions recorded for this company.</div>
                                             ) : (
-                                                <div className="table-container" style={{ padding: '8px' }}>
+                                                <ScrollableTable className="table-container glass-panel" style={{ padding: '8px' }}>
                                                     <table className="data-table">
                                                         <thead>
                                                             <tr>
@@ -323,7 +324,7 @@ const Companies = () => {
                                                             })}
                                                         </tbody>
                                                     </table>
-                                                </div>
+                                                </ScrollableTable>
                                             )}
                                         </div>
                                     )}
