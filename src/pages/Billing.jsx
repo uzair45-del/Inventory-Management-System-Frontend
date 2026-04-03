@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Plus, Trash2, Printer, Search, Receipt, Calculator, Save, RefreshCw, Download } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import CustomDropdown from '../components/CustomDropdown';
+import { notifySuccess, notifyError } from '../utils/notifications';
 import './Billing.css';
 
 const Billing = () => {
@@ -27,7 +28,7 @@ const Billing = () => {
 
     const handleDownloadPdf = async () => {
         if (cart.length === 0) {
-            alert("No items in the cart to print.");
+            notifyError("No items in the cart to print.");
             return;
         }
 
@@ -147,20 +148,20 @@ const Billing = () => {
 
     const handleSaveBill = async () => {
         if (cart.length === 0) {
-            alert("No items in the cart to create a bill.");
+            notifyError("No items in the cart to create a bill.");
             return;
         }
 
         // ===== QUOTATION BILL =====
         if (billType === 'quotation') {
-            alert("Quotation Generated! (No database changes)");
+            notifySuccess("Quotation Generated! (No database changes)");
             handleDownloadPdf();
             return;
         }
 
         // ===== CREDIT VALIDATION =====
         if (billType === 'credit' && (!customerName.trim() || !buyerPhone.trim())) {
-            alert('Credit bill requires Customer Name and Phone.');
+            notifyError('Credit bill requires Customer Name and Phone.');
             return;
         }
 
@@ -207,9 +208,9 @@ const Billing = () => {
 
             if (billType === 'credit') {
                 const remaining = total - Number(paidAmount || 0);
-                alert(`Credit Bill saved! Stock deducted. Remaining balance: Rs. ${remaining}`);
+                notifySuccess(`Credit Bill saved! Stock deducted. Remaining balance: Rs. ${remaining}`);
             } else {
-                alert('Original Bill saved! Stock has been deducted.');
+                notifySuccess('Original Bill saved! Stock has been deducted.');
             }
 
             setCart([]);
@@ -221,7 +222,7 @@ const Billing = () => {
             fetchCustomers();
         } catch (err) {
             console.error('Error creating sale:', err);
-            alert(err.response?.data?.error || 'Failed to save bill. Please try again.');
+            notifyError(err.response?.data?.error || 'Failed to save bill. Please try again.');
         } finally {
             setLoading(false);
         }

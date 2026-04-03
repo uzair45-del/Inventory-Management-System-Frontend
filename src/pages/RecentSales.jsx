@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, TrendingUp, Calendar, DollarSign, Download } from 'lucide-react';
 import { downloadSalesAnalyticsPdf } from '../utils/salesAnalyticsPdf';
+import { notifySuccess, notifyError, confirmAction } from '../utils/notifications';
+import Swal from 'sweetalert2';
 import './RecentSales.css';
 
 const TIME_FILTERS = [
@@ -59,23 +61,31 @@ const RecentSales = () => {
         }
     };
 
-    /** Full line: DELETE. Partial: POST /sales/:id/return — only this line’s credit drops in proportion. */
     const handleReturnSale = async (sale) => {
         const max = Number(sale.quantity);
-        const qtyStr = window.prompt(
-            `Return kitni quantity? (Max ${max}. Poori line = saara credit / payment is line ka clear. Kam qty = sirf is line ka hissa.)`,
-            String(max)
-        );
-        if (qtyStr === null) return;
+        const { value: qtyStr, isDismissed } = await Swal.fire({
+            title: 'Return quantity',
+            text: `(Max ${max}. Full line = clears this line's credit. Partial qty = partial credit.)`,
+            input: 'number',
+            inputValue: max,
+            showCancelButton: true,
+            confirmButtonText: 'Confirm Return',
+            background: 'var(--card-bg)',
+            color: 'var(--text-main)',
+            customClass: { popup: 'glass-panel', confirmButton: 'btn-primary', cancelButton: 'btn-danger' }
+        });
+        
+        if (isDismissed || qtyStr === undefined) return;
         const q = String(qtyStr).trim() === '' ? max : Number(qtyStr);
         if (!Number.isFinite(q) || q <= 0 || q > max) {
-            alert('Galat quantity.');
+            notifyError('Invalid quantity.');
             return;
         }
         try {
             const token = localStorage.getItem('inventory_token');
             if (q >= max) {
-                if (!window.confirm('Poori sale line return / undo? Stock return, is line ka credit clear.')) return;
+                const confirmed = await confirmAction('Full sale return?', 'Stock will be returned and credit cleared.');
+                if (!confirmed) return;
                 await axios.delete(`/api/sales/${sale.id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -86,11 +96,11 @@ const RecentSales = () => {
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
             }
-            alert('Return save ho gaya.');
+            notifySuccess('Return saved successfully.');
             fetchSales();
         } catch (err) {
             console.error('Return failed:', err);
-            alert(err.response?.data?.error || 'Return fail.');
+            notifyError(err.response?.data?.error || 'Return failed.');
         }
     };
 
@@ -140,7 +150,7 @@ const RecentSales = () => {
                             await downloadSalesAnalyticsPdf(filteredSales, periodLabel, activeFilter);
                         } catch (e) {
                             console.error(e);
-                            alert('Could not generate PDF. Try again.');
+                            notifyError('Could not generate PDF. Try again.');
                         }
                     }}
                 >

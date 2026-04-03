@@ -1,4 +1,5 @@
 import html2pdf from 'html2pdf.js';
+import { notifyError } from './notifications';
 
 function escapeHtml(s) {
     if (s == null || s === undefined) return '';
@@ -258,7 +259,7 @@ function buildInnerHtml(sales, analytics, periodLabel) {
  */
 export async function downloadSalesAnalyticsPdf(filteredSales, periodLabel, activeFilterKey) {
     if (!filteredSales?.length) {
-        alert('No sales to export for this filter.');
+        notifyError('No sales to export for this filter.');
         return;
     }
 

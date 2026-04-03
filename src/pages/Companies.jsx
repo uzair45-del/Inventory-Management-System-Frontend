@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Search, Building2, CreditCard, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { notifySuccess, notifyError } from '../utils/notifications';
 import './Companies.css';
 
 const Companies = () => {
@@ -111,9 +112,9 @@ const Companies = () => {
 
     const handlePay = async () => {
         const amt = Number(payAmount);
-        if (!amt || amt <= 0) { alert('Enter a valid amount.'); return; }
+        if (!amt || amt <= 0) { notifyError('Enter a valid amount.'); return; }
         const remaining = Number(payModal.txn.total_amount) - Number(payModal.txn.paid_amount);
-        if (amt > remaining) { alert(`Cannot pay more than remaining: Rs. ${remaining}`); return; }
+        if (amt > remaining) { notifyError(`Cannot pay more than remaining: Rs. ${remaining}`); return; }
 
         try {
             setPaying(true);
@@ -121,12 +122,12 @@ const Companies = () => {
             await axios.put(`/api/sales/${payModal.txn.id}`, { add_payment: amt }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            alert(`Payment of Rs. ${amt} recorded successfully!`);
+            notifySuccess(`Payment of Rs. ${amt} recorded successfully!`);
             setPayModal(null);
             fetchBuyers();
             fetchSales();
         } catch (err) {
-            alert(err.response?.data?.error || 'Payment failed.');
+            notifyError(err.response?.data?.error || 'Payment failed.');
         } finally {
             setPaying(false);
         }

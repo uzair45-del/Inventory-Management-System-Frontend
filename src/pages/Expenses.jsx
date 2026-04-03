@@ -3,7 +3,8 @@ import axios from 'axios';
 import { Plus, Edit2, Trash2, Search, DollarSign, X } from 'lucide-react';
 import CustomDropdown from '../components/CustomDropdown';
 import CustomDatePicker from '../components/CustomDatePicker';
-import './Expenses.css'; // We'll create a generic css or reuse styles
+import { notifySuccess, notifyError, confirmAction } from '../utils/notifications';
+import './Expenses.css';
 
 const API_URL = '/api/expenses';
 
@@ -66,24 +67,29 @@ const Expenses = () => {
         try {
             if (currentExpense.id) {
                 await axios.put(`${API_URL}/${currentExpense.id}`, currentExpense, getConfig());
+                notifySuccess('Expense updated successfully');
             } else {
                 await axios.post(API_URL, currentExpense, getConfig());
+                notifySuccess('Expense added successfully');
             }
             fetchExpenses();
             handleCloseModal();
         } catch (error) {
             console.error('Failed to save expense:', error);
-            alert('Error saving expense');
+            notifyError(error.response?.data?.error || 'Error saving expense');
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this expense?')) {
+        const confirmed = await confirmAction('Delete Expense?', 'Are you sure you want to delete this expense?');
+        if (confirmed) {
             try {
                 await axios.delete(`${API_URL}/${id}`, getConfig());
+                notifySuccess('Expense deleted');
                 fetchExpenses();
             } catch (error) {
                 console.error('Failed to delete expense:', error);
+                notifyError('Failed to delete expense');
             }
         }
     };

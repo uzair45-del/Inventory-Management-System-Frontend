@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Search, Plus, MoreVertical, Truck, Edit, Trash2, X } from 'lucide-react';
 import ProductSideList from '../components/ProductSideList';
+import { notifySuccess, notifyError, confirmAction } from '../utils/notifications';
 import './Suppliers.css';
 
 const Suppliers = () => {
@@ -98,11 +99,12 @@ const Suppliers = () => {
         
         // Check if supplier is already in pending list
         if (isSupplierIdInPendingList(id)) {
-            alert('This supplier is already in the pending list.');
+            notifyError('This supplier is already in the pending list.');
             return;
         }
         
-        if (!window.confirm(`Add "${supplier.name}" to pending deletions?`)) return;
+        const confirmed = await confirmAction('Pending Deletion', `Add "${supplier.name}" to pending deletions?`);
+        if (!confirmed) return;
 
         // Add to pending list instead of direct deletion
         const newItem = {
@@ -234,7 +236,7 @@ const Suppliers = () => {
         if (modalMode === 'add') {
             // Check if supplier with same name already exists in pending list
             if (isSupplierIdInPendingList(formData.name)) {
-                alert('This supplier is already in the pending list.');
+                notifyError('This supplier is already in the pending list.');
                 return;
             }
             
@@ -269,11 +271,11 @@ const Suppliers = () => {
             if (formData.id && formData.payment_amount) {
                 const payAmt = Number(formData.payment_amount);
                 if (payAmt > formData.txn_due) {
-                    alert(`Payment cannot exceed remaining total due: Rs. ${formData.txn_due}`);
+                    notifyError(`Payment cannot exceed remaining total due: Rs. ${formData.txn_due}`);
                     return;
                 }
                 if (payAmt < 0) {
-                    alert('Payment cannot be negative.');
+                    notifyError('Payment cannot be negative.');
                     return;
                 }
                 payload.payment_amount = payAmt;
@@ -285,11 +287,11 @@ const Suppliers = () => {
             if (modalMode === 'add') {
                 if ((formData.product_id || finalProductName) && Number(formData.quantity) > 0) {
                     if (Number(formData.paid_amount || 0) > Number(formData.total_amount)) {
-                        alert("Paid amount cannot exceed total amount.");
+                        notifyError("Paid amount cannot exceed total amount.");
                         return;
                     }
                     if (Number(formData.paid_amount || 0) < 0 || Number(formData.total_amount) < 0 || Number(formData.quantity) <= 0) {
-                        alert("Amounts and quantity must be valid positive numbers.");
+                        notifyError("Amounts and quantity must be valid positive numbers.");
                         return;
                     }
                 }
@@ -334,11 +336,11 @@ const Suppliers = () => {
                     }
 
                     if (final_paid_amount > final_total_amount) {
-                        alert("Total paid amount cannot exceed the total amount payable.");
+                        notifyError("Total paid amount cannot exceed the total amount payable.");
                         return;
                     }
                     if (final_paid_amount < 0 || final_total_amount < 0) {
-                        alert("Amounts cannot be negative.");
+                        notifyError("Amounts cannot be negative.");
                         return;
                     }
 
@@ -359,11 +361,11 @@ const Suppliers = () => {
                 } else if ((formData.product_id || finalProductName) && Number(formData.quantity) > 0) {
                     // User is adding their first transaction via the Edit modal
                     if (Number(formData.paid_amount || 0) > Number(formData.total_amount)) {
-                        alert("Paid amount cannot exceed total amount.");
+                        notifyError("Paid amount cannot exceed total amount.");
                         return;
                     }
                     if (Number(formData.paid_amount || 0) < 0 || Number(formData.total_amount) < 0 || Number(formData.quantity) <= 0) {
-                        alert("Amounts and quantity must be valid positive numbers.");
+                        notifyError("Amounts and quantity must be valid positive numbers.");
                         return;
                     }
 
@@ -386,7 +388,7 @@ const Suppliers = () => {
             closeModal();
         } catch (err) {
             console.error('Error saving supplier:', err);
-            alert(err.response?.data?.error || 'Failed to save supplier.');
+            notifyError(err.response?.data?.error || 'Failed to save supplier.');
         }
     };
 
@@ -409,8 +411,9 @@ const Suppliers = () => {
         setPendingItems(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleClearAllPending = () => {
-        if (window.confirm('Clear all pending changes?')) {
+    const handleClearAllPending = async () => {
+        const confirmed = await confirmAction('Clear Pending', 'Clear all pending changes?');
+        if (confirmed) {
             setPendingItems([]);
         }
     };
@@ -418,7 +421,8 @@ const Suppliers = () => {
     const handleProcessPendingItems = async () => {
         if (pendingItems.length === 0) return;
         
-        if (!window.confirm(`Process ${pendingItems.length} pending changes? This cannot be undone.`)) {
+        const confirmed = await confirmAction('Process Changes', `Process ${pendingItems.length} pending changes? This cannot be undone.`);
+        if (!confirmed) {
             return;
         }
 
@@ -451,9 +455,9 @@ const Suppliers = () => {
 
             // Show results
             if (errorCount > 0) {
-                alert(`Processed ${successCount} items successfully. ${errorCount} items failed:\n\n${errors.join('\n')}`);
+                notifyError(`Processed ${successCount} items. ${errorCount} items failed:\n\n${errors.join('\n')}`);
             } else {
-                alert(`Successfully processed ${successCount} items!`);
+                notifySuccess(`Successfully processed ${successCount} items!`);
             }
 
             // Clear pending items and refresh suppliers
@@ -462,7 +466,7 @@ const Suppliers = () => {
             fetchSuppliers();
         } catch (err) {
             console.error('Error processing pending items:', err);
-            alert('An unexpected error occurred while processing items.');
+            notifyError('An unexpected error occurred while processing items.');
         } finally {
             setIsProcessing(false);
         }

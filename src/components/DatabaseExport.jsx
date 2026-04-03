@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Download, Trash2, AlertTriangle, Shield, Database, FileText, Lock, Eye, EyeOff, Clock } from 'lucide-react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
+import { notifySuccess, notifyError } from '../utils/notifications';
 import './DatabaseExport.css';
 
 // Auto-lock after 3 minutes
@@ -23,7 +24,6 @@ const DatabaseExport = () => {
     const [isClearing, setIsClearing]           = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [confirmCode, setConfirmCode]         = useState('');
-    const [message, setMessage]                 = useState('');
 
     const lockTimer      = useRef(null);
     const countdownTimer = useRef(null);
@@ -102,7 +102,6 @@ const DatabaseExport = () => {
     const handleExport = async () => {
         try {
             setIsExporting(true);
-            setMessage('');
             const token = localStorage.getItem('inventory_token');
             const response = await axios.get('/api/export/export-csv', {
                 headers: { Authorization: `Bearer ${token}` },
@@ -116,12 +115,10 @@ const DatabaseExport = () => {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
-            setMessage('✅ Database exported successfully!');
-            setTimeout(() => setMessage(''), 3000);
+            notifySuccess('Database exported successfully!');
         } catch (error) {
             console.error('Export error:', error);
-            setMessage('❌ Export failed. Please try again.');
-            setTimeout(() => setMessage(''), 3000);
+            notifyError('Export failed. Please try again.');
         } finally {
             setIsExporting(false);
         }
@@ -131,14 +128,13 @@ const DatabaseExport = () => {
     const handleClearData = async () => {
         try {
             setIsClearing(true);
-            setMessage('');
             const token = localStorage.getItem('inventory_token');
             await axios.post(
                 '/api/export/clear-data',
                 { confirmCode: 'DELETE_MY_DATA' },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            setMessage('✅ All data cleared successfully!');
+            notifySuccess('All data cleared successfully!');
             setShowClearConfirm(false);
             setConfirmCode('');
             setTimeout(() => {
@@ -147,8 +143,7 @@ const DatabaseExport = () => {
                 window.location.href = '/login';
             }, 2000);
         } catch (error) {
-            setMessage('❌ Failed to clear data: ' + (error.response?.data?.message || error.message));
-            setTimeout(() => setMessage(''), 3000);
+            notifyError('Failed to clear data: ' + (error.response?.data?.message || error.message));
         } finally {
             setIsClearing(false);
         }
@@ -169,12 +164,6 @@ const DatabaseExport = () => {
                     <h2><Database size={24} /> Database Management</h2>
                     <p>Export your complete data or clear everything</p>
                 </div>
-
-                {message && (
-                    <div className={`message ${message.includes('✅') ? 'success' : 'error'}`}>
-                        {message}
-                    </div>
-                )}
 
                 <div className="export-actions">
                     {/* Export Section */}

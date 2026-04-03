@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Search, Plus, MoreVertical, CreditCard, Edit, Trash2, X } from 'lucide-react';
 import ProductSideList from '../components/ProductSideList';
 import CustomDatePicker from '../components/CustomDatePicker';
+import { notifySuccess, notifyError, confirmAction } from '../utils/notifications';
 import './Buyers.css';
 
 const Buyers = () => {
@@ -94,11 +95,12 @@ const Buyers = () => {
         
         // Check if customer is already in pending list
         if (isCustomerIdInPendingList(id)) {
-            alert('This customer is already in the pending list.');
+            notifyError('This customer is already in the pending list.');
             return;
         }
         
-        if (!window.confirm(`Add "${buyer.name}" to pending deletions?`)) return;
+        const confirmed = await confirmAction('Pending Deletion', `Add "${buyer.name}" to pending deletions?`);
+        if (!confirmed) return;
 
         // Add to pending list instead of direct deletion
         const newItem = {
@@ -178,7 +180,7 @@ const Buyers = () => {
         if (modalMode === 'add') {
             // Check if customer with same name already exists in pending list
             if (isCustomerIdInPendingList(formData.name)) {
-                alert('This customer is already in the pending list.');
+                notifyError('This customer is already in the pending list.');
                 return;
             }
             
@@ -240,7 +242,7 @@ const Buyers = () => {
             } else {
                 if (formData.txn_id && formData.add_payment && Number(formData.add_payment) > 0) {
                     if (Number(formData.add_payment) > Number(formData.remaining_amount)) {
-                        alert("Cannot pay more than remaining credit amount.");
+                        notifyError("Cannot pay more than remaining credit amount.");
                         return;
                     }
                     // Update the transaction parallel to buyer update
@@ -260,7 +262,7 @@ const Buyers = () => {
             closeModal();
         } catch (err) {
             console.error('Error saving customer:', err);
-            alert(err.response?.data?.error || 'Failed to save customer.');
+            notifyError(err.response?.data?.error || 'Failed to save customer.');
         }
     };
 
@@ -283,8 +285,9 @@ const Buyers = () => {
         setPendingItems(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleClearAllPending = () => {
-        if (window.confirm('Clear all pending changes?')) {
+    const handleClearAllPending = async () => {
+        const confirmed = await confirmAction('Clear Pending', 'Clear all pending changes?');
+        if (confirmed) {
             setPendingItems([]);
         }
     };
@@ -292,7 +295,8 @@ const Buyers = () => {
     const handleProcessPendingItems = async () => {
         if (pendingItems.length === 0) return;
         
-        if (!window.confirm(`Process ${pendingItems.length} pending changes? This cannot be undone.`)) {
+        const confirmed = await confirmAction('Process Changes', `Process ${pendingItems.length} pending changes? This cannot be undone.`);
+        if (!confirmed) {
             return;
         }
 
@@ -325,9 +329,9 @@ const Buyers = () => {
 
             // Show results
             if (errorCount > 0) {
-                alert(`Processed ${successCount} items successfully. ${errorCount} items failed:\n\n${errors.join('\n')}`);
+                notifyError(`Processed ${successCount} items. ${errorCount} items failed:\n\n${errors.join('\n')}`);
             } else {
-                alert(`Successfully processed ${successCount} items!`);
+                notifySuccess(`Successfully processed ${successCount} items!`);
             }
 
             // Clear pending items and refresh buyers
@@ -336,7 +340,7 @@ const Buyers = () => {
             fetchBuyers();
         } catch (err) {
             console.error('Error processing pending items:', err);
-            alert('An unexpected error occurred while processing items.');
+            notifyError('An unexpected error occurred while processing items.');
         } finally {
             setIsProcessing(false);
         }

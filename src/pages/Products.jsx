@@ -4,6 +4,7 @@ import { Search, Plus, Package, SlidersHorizontal, Edit, Trash2, X } from 'lucid
 import CustomDropdown from '../components/CustomDropdown';
 import CustomDatePicker from '../components/CustomDatePicker';
 import ProductSideList from '../components/ProductSideList';
+import { notifySuccess, notifyError, confirmAction } from '../utils/notifications';
 import './Products.css';
 
 const Products = () => {
@@ -48,7 +49,7 @@ const Products = () => {
         add_quantity: '',
         restock_paid_amount: '',
         restock_purchase_date: '',
-        quantity_unit: 'Per Piece',
+        quantity_unit: 'Piece',
         paid_amount: '',
         supplier_phone: '',
         supplier_company_name: ''
@@ -94,11 +95,12 @@ const Products = () => {
         
         // Check if product is already in pending list
         if (isProductIdInPendingList(id)) {
-            alert('This product is already in the pending list.');
+            notifyError('This product is already in the pending list.');
             return;
         }
         
-        if (!window.confirm(`Add "${product.name}" to pending deletions?`)) return;
+        const confirmed = await confirmAction('Pending Deletion', `Add "${product.name}" to pending deletions?`);
+        if (!confirmed) return;
 
         // Add to pending list instead of direct deletion
         const newItem = {
@@ -129,7 +131,7 @@ const Products = () => {
             add_quantity: '',
             restock_paid_amount: '',
             restock_purchase_date: new Date().toISOString().split('T')[0],
-            quantity_unit: 'Per Piece',
+            quantity_unit: 'Piece',
             paid_amount: '',
             supplier_phone: '',
             supplier_company_name: ''
@@ -156,7 +158,7 @@ const Products = () => {
             add_quantity: '',
             restock_paid_amount: '',
             restock_purchase_date: new Date().toISOString().split('T')[0],
-            quantity_unit: product.quantity_unit || 'Per Piece',
+            quantity_unit: product.quantity_unit || 'Piece',
             paid_amount: '',
             supplier_phone: '',
             supplier_company_name: ''
@@ -234,11 +236,11 @@ const Products = () => {
             const pr = parseFloat(formData.purchase_rate);
             const sp = parseFloat(formData.price);
             if (pr < 0) {
-                alert('Purchase rate cannot be negative.');
+                notifyError('Purchase rate cannot be negative.');
                 return;
             }
             if (pr > sp) {
-                alert('Purchase rate cannot be greater than sale price.');
+                notifyError('Purchase rate cannot be greater than sale price.');
                 return;
             }
         }
@@ -246,13 +248,13 @@ const Products = () => {
         if (modalMode === 'add') {
             // Check if product with same name already exists in pending list
             if (isProductIdInPendingList(formData.name.trim())) {
-                alert('This product is already in the pending list.');
+                notifyError('This product is already in the pending list.');
                 return;
             }
             
             // Validate required fields
             if (!formData.name.trim() || !formData.price || !formData.total_quantity) {
-                alert('Please fill in all required fields.');
+                notifyError('Please fill in all required fields.');
                 return;
             }
 
@@ -292,14 +294,14 @@ const Products = () => {
 
                 if (hasRestock) {
                     if (!formData.purchased_from?.trim()) {
-                        alert('Supplier is required when adding stock.');
+                        notifyError('Supplier is required when adding stock.');
                         return;
                     }
                     const rate = parseFloat(formData.purchase_rate || 0);
                     const batchTotal = rate * addQ;
                     const paidRestock = parseFloat(formData.restock_paid_amount || 0);
                     if (paidRestock < 0 || paidRestock > batchTotal) {
-                        alert(`Payment cannot exceed this batch total (Rs. ${batchTotal.toLocaleString()}).`);
+                        notifyError(`Payment cannot exceed this batch total (Rs. ${batchTotal.toLocaleString()}).`);
                         return;
                     }
                 }
@@ -329,7 +331,7 @@ const Products = () => {
 
                 if (addPaymentAmount && Number(addPaymentAmount) > 0 && supplierTxnInfo?.txn_id) {
                     if (Number(addPaymentAmount) > supplierTxnInfo.remaining) {
-                        alert('Payment cannot exceed remaining amount: Rs. ' + supplierTxnInfo.remaining);
+                        notifyError('Payment cannot exceed remaining amount: Rs. ' + supplierTxnInfo.remaining);
                         return;
                     }
                     await axios.put(`/api/purchases/${supplierTxnInfo.txn_id}`, {
@@ -342,7 +344,7 @@ const Products = () => {
                 closeModal();
             } catch (err) {
                 console.error('Error saving product:', err);
-                alert(err.response?.data?.error || 'Failed to save product.');
+                notifyError(err.response?.data?.error || 'Failed to save product.');
             }
         }
     };
@@ -386,8 +388,9 @@ const Products = () => {
         setPendingItems(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleClearAllPending = () => {
-        if (window.confirm('Clear all pending changes?')) {
+    const handleClearAllPending = async () => {
+        const confirmed = await confirmAction('Clear Pending', 'Clear all pending changes?');
+        if (confirmed) {
             setPendingItems([]);
         }
     };
@@ -409,7 +412,8 @@ const Products = () => {
     const handleProcessPendingItems = async () => {
         if (pendingItems.length === 0) return;
         
-        if (!window.confirm(`Process ${pendingItems.length} pending changes? This cannot be undone.`)) {
+        const confirmed = await confirmAction('Process Changes', `Process ${pendingItems.length} pending changes? This cannot be undone.`);
+        if (!confirmed) {
             return;
         }
 
@@ -442,9 +446,9 @@ const Products = () => {
 
             // Show results
             if (errorCount > 0) {
-                alert(`Processed ${successCount} items successfully. ${errorCount} items failed:\n\n${errors.join('\n')}`);
+                notifyError(`Processed ${successCount} items. ${errorCount} items failed:\n\n${errors.join('\n')}`);
             } else {
-                alert(`Successfully processed ${successCount} items!`);
+                notifySuccess(`Successfully processed ${successCount} items!`);
             }
 
             // Clear pending items and refresh products
@@ -453,7 +457,7 @@ const Products = () => {
             fetchProducts();
         } catch (err) {
             console.error('Error processing pending items:', err);
-            alert('An unexpected error occurred while processing items.');
+            notifyError('An unexpected error occurred while processing items.');
         } finally {
             setIsProcessing(false);
         }
@@ -595,7 +599,7 @@ const Products = () => {
                                     <td>{product.max_discount ? `Rs. ${product.max_discount}` : '-'}</td>
                                     <td>
                                         <span className="badge" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)', color: '#a78bfa', padding: '3px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
-                                            {product.quantity_unit || 'Per Piece'}
+                                            {product.quantity_unit || 'Piece'}
                                         </span>
                                     </td>
                                     <td>{product.purchased_from || '-'}</td>
@@ -707,11 +711,11 @@ const Products = () => {
                                                 value={formData.quantity_unit}
                                                 onChange={handleFormChange}
                                                 options={[
-                                                    { value: 'Per Piece', label: 'Per Piece' },
-                                                    { value: 'Per Dozen', label: 'Per Dozen' },
-                                                    { value: 'Per Box', label: 'Per Box' },
-                                                    { value: 'Per Ft', label: 'Per Ft' },
-                                                    { value: 'Per Meter', label: 'Per Meter' }
+                                                    { value: 'Piece', label: 'Piece' },
+                                                    { value: 'Dozen', label: 'Dozen' },
+                                                    { value: 'Box', label: 'Box' },
+                                                    { value: 'Ft', label: 'Ft' },
+                                                    { value: 'Meter', label: 'Meter' }
                                                 ]}
                                             />
                                         </div>
@@ -745,11 +749,11 @@ const Products = () => {
                                             value={formData.quantity_unit}
                                             onChange={handleFormChange}
                                             options={[
-                                                { value: 'Per Piece', label: 'Per Piece' },
-                                                { value: 'Per Dozen', label: 'Per Dozen' },
-                                                { value: 'Per Box', label: 'Per Box' },
-                                                { value: 'Per Ft', label: 'Per Ft' },
-                                                { value: 'Per Meter', label: 'Per Meter' }
+                                                { value: 'Piece', label: 'Piece' },
+                                                { value: 'Dozen', label: 'Dozen' },
+                                                { value: 'Box', label: 'Box' },
+                                                { value: 'Ft', label: 'Ft' },
+                                                { value: 'Meter', label: 'Meter' }
                                             ]}
                                         />
                                     </div>

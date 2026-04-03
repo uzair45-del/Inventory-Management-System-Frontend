@@ -4,6 +4,7 @@ import html2pdf from 'html2pdf.js';
 import { RefreshCw, TrendingUp, TrendingDown, DollarSign, Wallet, Users, Truck, AlertTriangle, Building2, Banknote, Download } from 'lucide-react';
 import CustomDropdown from '../components/CustomDropdown';
 import CustomDatePicker from '../components/CustomDatePicker';
+import { notifyError } from '../utils/notifications';
 import './MonthlyReport.css'; // Optional generic modern styling
 import './Reports.css'; // Premium analytics styling
 
@@ -81,7 +82,7 @@ const MonthlyReport = () => {
             setReportData(response.data);
         } catch (error) {
             console.error('Failed to fetch monthly report:', error);
-            alert('Failed to load report data');
+            notifyError('Failed to load report data');
         } finally {
             setLoading(false);
         }
