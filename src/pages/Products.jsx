@@ -805,7 +805,8 @@ const Products = () => {
                                                 { value: 'Set', label: 'Set' },
                                                 { value: 'Strip', label: 'Strip' },
                                                 { value: 'Roll', label: 'Roll' },
-                                                { value: 'Bag', label: 'Bag' }
+                                                { value: 'Bag', label: 'Bag' },
+                                                { value: 'Coil', label: 'Coil' }
                                             ]}
                                         />
                                     </div>
