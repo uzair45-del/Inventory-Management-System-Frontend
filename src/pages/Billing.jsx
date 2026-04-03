@@ -445,7 +445,10 @@ const Billing = () => {
                                                     onMouseDown={() => {
                                                         setSelectedProduct(p.id);
                                                         setProductSearchTerm(`${p.name} - Rs. ${p.price}`);
-                                                        setSelectedUnit(p.quantity_unit || 'Per Piece');
+                                                        const unitToSet = p.quantity_unit 
+                                                            ? (p.quantity_unit.toLowerCase().startsWith('per ') ? p.quantity_unit : `Per ${p.quantity_unit}`) 
+                                                            : 'Per Piece';
+                                                        setSelectedUnit(unitToSet);
                                                         setShowProductDropdown(false);
                                                     }}
                                                 >
