@@ -327,14 +327,26 @@ const Billing = () => {
             if (Number(paidAmount) > total) return false;
         }
         
-        // Split payment validation
+        // Split payment validation - different logic for credit vs regular bills
         if (paymentMethod === 'Split') {
-            const cash = Number(cashAmount || 0);
-            const online = Number(onlineAmount || 0);
-            const totalPaid = cash + online;
-            
-            if (totalPaid !== total) return false;
-            if (cash < 0 || online < 0) return false;
+            if (billType === 'credit') {
+                // For credit bills: cash + online = paid amount
+                const cash = Number(cashAmount || 0);
+                const online = Math.max(0, Number(paidAmount || 0) - Number(cashAmount || 0));
+                const totalPaid = cash + online;
+                
+                if (totalPaid !== Number(paidAmount || 0)) return false;
+                if (cash < 0 || online < 0) return false;
+                if (cash > Number(paidAmount || 0)) return false; // cash cannot exceed paid amount
+            } else {
+                // For regular bills: cash + online = total amount
+                const cash = Number(cashAmount || 0);
+                const online = Number(onlineAmount || 0);
+                const totalPaid = cash + online;
+                
+                if (totalPaid !== total) return false;
+                if (cash < 0 || online < 0) return false;
+            }
         }
         
         // Cash payment validation
