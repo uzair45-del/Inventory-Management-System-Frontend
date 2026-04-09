@@ -121,10 +121,11 @@ const ExpandableSupplierCard = ({
                                                         {txn.products?.name || `Product #${txn.product_id}`}
                                                     </span>
                                                     {txn.payment_method && (
-                                                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                                                            {txn.payment_method} 
+                                                        <span className={`payment-badge ${txn.payment_method.toLowerCase()}`}>
+                                                            {txn.payment_method === 'Cash' ? '💵' : txn.payment_method === 'Online' ? '📱' : '🔀'}
+                                                            {txn.payment_method}
                                                             {txn.payment_method === 'Split' && (
-                                                                <span style={{fontWeight: 400}}> (C: {txn.cash_amount} | O: {txn.online_amount})</span>
+                                                                <span className="split-detail">C:{txn.cash_amount} | O:{txn.online_amount}</span>
                                                             )}
                                                         </span>
                                                     )}
