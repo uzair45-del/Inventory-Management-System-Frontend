@@ -320,10 +320,10 @@ const Billing = () => {
         // Basic validation
         if (cart.length === 0) return false;
         
-        // Credit bill validation
+        // Credit bill validation - allow partial payments
         if (billType === 'credit') {
             if (!customerName.trim() || !buyerPhone.trim()) return false;
-            if (!paidAmount || Number(paidAmount) <= 0) return false;
+            if (!paidAmount || Number(paidAmount) < 0) return false;
             if (Number(paidAmount) > total) return false;
         }
         
