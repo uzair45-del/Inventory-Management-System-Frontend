@@ -24,7 +24,7 @@ const Billing = () => {
 
     // Credit-specific fields
     const [buyerPhone, setBuyerPhone] = useState('');
-    const [paidAmount, setPaidAmount] = useState('');
+    const [paidAmount, setPaidAmount] = useState('0');
 
     // Payment method fields
     const [paymentMethod, setPaymentMethod] = useState('Cash');
@@ -179,17 +179,13 @@ const Billing = () => {
         } else if (paymentMethod === 'Online') {
             finalOnlineAmount = targetPaidAmount;
         } else if (paymentMethod === 'Split') {
-            if (!cashAmount || Number(cashAmount) <= 0) {
-                notifyError('Please enter a valid Cash Amount for the split payment.');
-                return;
-            }
-            if (Number(cashAmount) >= targetPaidAmount) {
-                notifyError('Cash Amount must be less than the total paid amount for a split payment.');
+            if (Number(cashAmount || 0) < 0 || Number(onlineAmount || 0) < 0) {
+                notifyError('Please enter valid amounts for the split payment.');
                 return;
             }
             finalCashAmount = Number(cashAmount || 0);
             finalOnlineAmount = Number(onlineAmount || 0);
-            if (targetPaidAmount > 0 && Math.abs((finalCashAmount + finalOnlineAmount) - targetPaidAmount) > 1) {
+            if (targetPaidAmount > 0 && Math.abs((finalCashAmount + finalOnlineAmount) - targetPaidAmount) > 0.01) {
                 notifyError(`Split amounts (${finalCashAmount} + ${finalOnlineAmount} = ${finalCashAmount + finalOnlineAmount}) must equal the paid amount (${targetPaidAmount}).`);
                 return;
             }
@@ -299,7 +295,7 @@ const Billing = () => {
             setCustomerName('');
             setCompanyName('');
             setBuyerPhone('');
-            setPaidAmount('');
+            setPaidAmount('0');
             setCashAmount('');
             setOnlineAmount('');
             fetchProducts();
@@ -332,12 +328,11 @@ const Billing = () => {
             if (billType === 'credit') {
                 // For credit bills: cash + online = paid amount
                 const cash = Number(cashAmount || 0);
-                const online = Math.max(0, Number(paidAmount || 0) - Number(cashAmount || 0));
+                const online = Number(onlineAmount || 0);
                 const totalPaid = cash + online;
                 
                 if (totalPaid !== Number(paidAmount || 0)) return false;
                 if (cash < 0 || online < 0) return false;
-                if (cash > Number(paidAmount || 0)) return false; // cash cannot exceed paid amount
             } else {
                 // For regular bills: cash + online = total amount
                 const cash = Number(cashAmount || 0);
