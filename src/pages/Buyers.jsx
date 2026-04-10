@@ -532,8 +532,19 @@ const Buyers = () => {
                                                         </div>
                                                     </td>
                                                     <td>
-                                                        <span className={`qty-badge ${remainingAmount > 0 ? 'low-stock' : 'in-stock'}`}>
-                                                            Rs. {remainingAmount}
+                                                        <span style={{
+                                                            padding: '4px 8px',
+                                                            borderRadius: '6px',
+                                                            fontSize: '0.85em',
+                                                            fontWeight: 'bold',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            backgroundColor: remainingAmount > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                                                            color: remainingAmount > 0 ? '#ef4444' : '#22c55e',
+                                                            border: `1px solid ${remainingAmount > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(34, 197, 94, 0.3)'}`
+                                                        }}>
+                                                            {remainingAmount > 0 ? `⚠️ Rs. ${remainingAmount.toLocaleString()} Pending` : '✅ Cleared'}
                                                         </span>
                                                     </td>
                                                 </>
