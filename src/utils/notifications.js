@@ -31,3 +31,40 @@ export const confirmAction = async (title, text = "This cannot be undone.") => {
 
   return result.isConfirmed;
 };
+
+// 3. Manual Close Modals (Requires user to click OK)
+export const alertSuccess = (title, text) => {
+  return Swal.fire({
+    title: title,
+    text: text,
+    icon: 'success',
+    confirmButtonColor: '#3b82f6',
+    confirmButtonText: 'OK',
+    background: 'var(--card-bg)',
+    color: 'var(--text-main)',
+    backdrop: `rgba(0,0,0,0.5)`,
+    customClass: {
+      popup: 'glass-panel',
+      title: 'modal-title',
+      confirmButton: 'btn-primary'
+    }
+  });
+};
+
+export const alertError = (title, text) => {
+  return Swal.fire({
+    title: title,
+    text: text,
+    icon: 'error',
+    confirmButtonColor: '#ef4444',
+    confirmButtonText: 'OK',
+    background: 'var(--card-bg)',
+    color: 'var(--text-main)',
+    backdrop: `rgba(0,0,0,0.5)`,
+    customClass: {
+      popup: 'glass-panel',
+      title: 'modal-title',
+      confirmButton: 'btn-danger'
+    }
+  });
+};

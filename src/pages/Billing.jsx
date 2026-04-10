@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Plus, Trash2, Printer, Search, Receipt, Calculator, Save, RefreshCw, Download } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import CustomDropdown from '../components/CustomDropdown';
-import { notifySuccess, notifyError } from '../utils/notifications';
+import { alertSuccess, alertError } from '../utils/notifications';
 import './Billing.css';
 
 const Billing = () => {
@@ -35,7 +35,7 @@ const Billing = () => {
 
     const handleDownloadPdf = async () => {
         if (cart.length === 0) {
-            notifyError("No items in the cart to print.");
+            alertError('Error', "No items in the cart to print.");
             return;
         }
 
@@ -159,13 +159,13 @@ const Billing = () => {
 
     const handleSaveBill = async () => {
         if (cart.length === 0) {
-            notifyError("No items in the cart to create a bill.");
+            alertError('Error', "No items in the cart to create a bill.");
             return;
         }
 
         // ===== QUOTATION BILL =====
         if (billType === 'quotation') {
-            notifySuccess("Quotation Generated! (No database changes)");
+            alertSuccess('Success', "Quotation Generated! (No database changes)");
             handleDownloadPdf();
             return;
         }
@@ -180,20 +180,20 @@ const Billing = () => {
             finalOnlineAmount = targetPaidAmount;
         } else if (paymentMethod === 'Split') {
             if (Number(cashAmount || 0) < 0 || Number(onlineAmount || 0) < 0) {
-                notifyError('Please enter valid amounts for the split payment.');
+                alertError('Error', 'Please enter valid amounts for the split payment.');
                 return;
             }
             finalCashAmount = Number(cashAmount || 0);
             finalOnlineAmount = Number(onlineAmount || 0);
             if (targetPaidAmount > 0 && Math.abs((finalCashAmount + finalOnlineAmount) - targetPaidAmount) > 0.01) {
-                notifyError(`Split amounts (${finalCashAmount} + ${finalOnlineAmount} = ${finalCashAmount + finalOnlineAmount}) must equal the paid amount (${targetPaidAmount}).`);
+                alertError('Error', `Split amounts (${finalCashAmount} + ${finalOnlineAmount} = ${finalCashAmount + finalOnlineAmount}) must equal the paid amount (${targetPaidAmount}).`);
                 return;
             }
         }
 
         // ===== CREDIT VALIDATION =====
         if (billType === 'credit' && (!customerName.trim() || !buyerPhone.trim())) {
-            notifyError('Credit bill requires Customer Name and Phone.');
+            alertError('Error', 'Credit bill requires Customer Name and Phone.');
             return;
         }
 
@@ -280,14 +280,14 @@ const Billing = () => {
 
             if (billType === 'credit') {
                 const remaining = total - Number(paidAmount || 0);
-                notifySuccess(`Credit Bill saved! Stock deducted. Remaining balance: Rs. ${remaining}`);
+                alertSuccess('Success', `Credit Bill saved! Stock deducted. Remaining balance: Rs. ${remaining}`);
             } else {
-                notifySuccess('Original Bill saved! Stock has been deducted.');
+                alertSuccess('Success', 'Original Bill saved! Stock has been deducted.');
             }
 
             if (lowStockAlerts.length > 0) {
                 setTimeout(() => {
-                    notifyError(`⚠️ Low Stock Alert:\n${lowStockAlerts.join('\n')}`);
+                    alertError('Error', `⚠️ Low Stock Alert:\n${lowStockAlerts.join('\n')}`);
                 }, 500);
             }
 
@@ -302,7 +302,7 @@ const Billing = () => {
             fetchCustomers();
         } catch (err) {
             console.error('Error creating sale:', err);
-            notifyError(err.response?.data?.error || 'Failed to save bill. Please try again.');
+            alertError('Error', err.response?.data?.error || 'Failed to save bill. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -897,3 +897,4 @@ const Billing = () => {
 };
 
 export default Billing;
+
