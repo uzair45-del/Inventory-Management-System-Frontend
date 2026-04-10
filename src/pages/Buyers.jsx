@@ -203,17 +203,49 @@ const Buyers = () => {
             }
             
             // For new customers, add to pending list instead of direct save
+            let splitCash = 0;
+            let splitOnline = 0;
+            let actualPaymentMethod = formData.payment_method || 'Cash';
+            let targetAmountForSplitValidation = Number(formData.paid_amount || 0);
+            const finalProductName = formData.product_name || productSearch;
+
+            if (actualPaymentMethod === 'Split' && targetAmountForSplitValidation > 0) {
+                splitCash = Number(formData.cash_amount || 0);
+                splitOnline = Number(formData.online_amount || 0);
+                if (splitCash < 0 || splitOnline < 0) {
+                    notifyError('Split amounts cannot be negative.');
+                    return;
+                }
+                if (Math.abs((splitCash + splitOnline) - targetAmountForSplitValidation) > 0.01) {
+                    notifyError(`Split amounts (${splitCash} + ${splitOnline}) must equal the paid amount (${targetAmountForSplitValidation}).`);
+                    return;
+                }
+            }
+
             const payload = {
                 name: formData.name,
                 phone: formData.phone,
                 address: formData.address,
                 company_name: formData.company_name || null
             };
+            
+            const salePayload = (formData.product_id || finalProductName) && Number(formData.quantity) > 0 ? {
+                product_id: formData.product_id || null,
+                product_name: finalProductName,
+                quantity: Number(formData.quantity),
+                total_amount: Number(formData.total_amount),
+                paid_amount: Number(formData.paid_amount || 0),
+                bill_type: 'CREDIT',
+                payment_method: actualPaymentMethod,
+                cash_amount: splitCash,
+                online_amount: splitOnline
+            } : null;
 
             const newItem = {
                 action: 'add',
                 name: formData.name,
-                data: payload
+                data: payload,
+                salePayload
             };
             
             setPendingItems(prev => [...prev, newItem]);
@@ -258,33 +290,7 @@ const Buyers = () => {
                 }
             }
 
-            if (modalMode === 'add') {
-                const buyerRes = await axios.post('/api/buyers', payload, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-
-                const newBuyer = buyerRes.data.data?.[0];
-
-                // If product is selected, create a credit sale transaction
-                if (newBuyer && (formData.product_id || finalProductName) && Number(formData.quantity) > 0) {
-                    const salePayload = {
-                        buyer_id: newBuyer.id,
-                        product_id: formData.product_id || null,
-                        product_name: finalProductName,
-                        quantity: Number(formData.quantity),
-                        total_amount: Number(formData.total_amount),
-                        paid_amount: Number(formData.paid_amount || 0),
-                        bill_type: 'CREDIT', // Credit
-                        payment_method: actualPaymentMethod,
-                        cash_amount: splitCash,
-                        online_amount: splitOnline
-                    };
-
-                    await axios.post('/api/sales', salePayload, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                }
-            } else {
+            if (modalMode === 'edit') {
                 if (formData.txn_id && formData.add_payment && Number(formData.add_payment) > 0) {
                     if (Number(formData.add_payment) > Number(formData.remaining_amount)) {
                         notifyError("Cannot pay more than remaining credit amount.");
@@ -359,9 +365,15 @@ const Buyers = () => {
             for (const item of pendingItems) {
                 try {
                     if (item.action === 'add') {
-                        await axios.post('/api/buyers', item.data, {
+                        const buyerRes = await axios.post('/api/buyers', item.data, {
                             headers: { Authorization: `Bearer ${token}` }
                         });
+                        const newBuyer = buyerRes.data.data?.[0];
+                        if (newBuyer && item.salePayload) {
+                            await axios.post('/api/sales', { ...item.salePayload, buyer_id: newBuyer.id }, {
+                                headers: { Authorization: `Bearer ${token}` }
+                            });
+                        }
                         successCount++;
                     } else if (item.action === 'delete') {
                         await axios.delete(`/api/buyers/${item.data.id}`, {
