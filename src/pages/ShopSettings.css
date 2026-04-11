@@ -1,0 +1,142 @@
+.shop-settings-container {
+    padding: 24px;
+    max-width: 1100px;
+}
+
+.shop-settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+    .shop-settings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.shop-form-panel,
+.shop-preview-panel {
+    padding: 28px;
+}
+
+/* Field Groups */
+.shop-field-group {
+    margin-bottom: 20px;
+}
+
+.shop-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.shop-input {
+    width: 100%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    padding: 12px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.shop-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.shop-textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+}
+
+/* Save button pulse animation */
+.saved-pulse {
+    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+    animation: savedPop 0.3s ease-out;
+}
+
+@keyframes savedPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+}
+
+/* Receipt Preview */
+.receipt-preview-box {
+    background: #fff;
+    color: #0f172a;
+    border-radius: 12px;
+    padding: 24px 20px;
+    border: 1px solid #e2e8f0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.preview-logo {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.preview-shop-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin: 0 0 6px;
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.preview-address {
+    font-size: 0.8rem;
+    color: #64748b;
+    text-align: center;
+    margin: 0 0 4px;
+}
+
+.preview-phone {
+    font-size: 0.8rem;
+    color: #64748b;
+    text-align: center;
+    margin: 0 0 12px;
+}
+
+.preview-badge {
+    display: inline-block;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #64748b;
+    display: block;
+    text-align: center;
+    margin: 0 auto 14px;
+    width: fit-content;
+}
+
+.preview-divider {
+    border-top: 1px dashed #cbd5e1;
+    margin: 10px 0;
+}
+
+.preview-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #475569;
+    padding: 4px 0;
+}

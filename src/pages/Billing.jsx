@@ -4,9 +4,11 @@ import { Plus, Trash2, Printer, Search, Receipt, Calculator, Save, RefreshCw, Do
 import html2pdf from 'html2pdf.js';
 import CustomDropdown from '../components/CustomDropdown';
 import { alertSuccess, alertError } from '../utils/notifications';
+import { useShopSettings } from '../utils/useShopSettings';
 import './Billing.css';
 
 const Billing = () => {
+    const shopSettings = useShopSettings();
     const [products, setProducts] = useState([]);
     const [customers, setCustomers] = useState([]);
     const [cart, setCart] = useState([]);
@@ -921,9 +923,11 @@ const Billing = () => {
                         <div className="receipt-logo">
                             <Calculator size={24} />
                         </div>
-                        <h2 style={{ fontSize: '1.4rem' }}>Jellani Hardware, Paint<br />and Electric Store</h2>
-                        <p className="receipt-address">Main Kallar Syedan Road, Near DHA Phase 7 Gate 1</p>
-                        <p className="receipt-contact">Ph: 0329-5749291</p>
+                        <h2 style={{ fontSize: '1.4rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                            {shopSettings.name}
+                        </h2>
+                        <p className="receipt-address">{shopSettings.address}</p>
+                        <p className="receipt-contact">Ph: {shopSettings.phone}</p>
 
                         <div className="receipt-type-badge">
                             {billType === 'quotation' ? 'QUOTATION / ESTIMATE' : billType === 'credit' ? 'CREDIT / CREDIT INVOICE' : 'TAX INVOICE'}

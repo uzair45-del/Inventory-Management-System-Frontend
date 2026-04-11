@@ -19,6 +19,7 @@ const MonthlyReport = lazy(() => import('./pages/MonthlyReport'));
 const DailyReport = lazy(() => import('./pages/DailyReport'));
 const Companies = lazy(() => import('./pages/Companies'));
 const DatabaseExport = lazy(() => import('./components/DatabaseExport'));
+const ShopSettings = lazy(() => import('./pages/ShopSettings'));
 
 // Lightweight loading fallback shown while a lazy chunk loads
 const PageLoader = () => (
@@ -63,6 +64,7 @@ function App() {
               <Route path="daily-report" element={<DailyReport />} />
               <Route path="companies" element={<Companies />} />
               <Route path="database-export" element={<DatabaseExport />} />
+              <Route path="settings" element={<ShopSettings />} />
             </Route>
           </Route>
         </Routes>
