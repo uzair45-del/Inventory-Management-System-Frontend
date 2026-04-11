@@ -36,7 +36,41 @@ const Layout = () => {
                 console.error("Failed to fetch initial low stock status", err);
             }
         };
+
+        const checkOldDataForArchive = async () => {
+            try {
+                // Check once a month
+                const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+                const lastCheckMonth = localStorage.getItem('last_archive_check_month');
+                if (lastCheckMonth === currentMonth) return;
+
+                const token = localStorage.getItem('inventory_token');
+                if (!token) return;
+                
+                const { data } = await axios.get('/api/export/check-old-data', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (data.hasOldData) {
+                    toast('🕒 You have data older than 1 year! Please visit Database Management to archive it and free up space.', {
+                        duration: 10000,
+                        icon: '💾',
+                        style: {
+                            borderRadius: '10px',
+                            background: '#1e293b',
+                            color: '#38bdf8',
+                            border: '1px solid #38bdf8'
+                        },
+                    });
+                }
+                localStorage.setItem('last_archive_check_month', currentMonth);
+            } catch (err) {
+                console.error("Failed to check old data for archiving", err);
+            }
+        };
+
         checkLowStock();
+        checkOldDataForArchive();
     }, []);
 
     // Assume user is logged in for the Layout wrapper (Login is handled separately in App.jsx)

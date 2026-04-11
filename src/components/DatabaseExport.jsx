@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Download, Trash2, AlertTriangle, Shield, Database, FileText, Lock, Eye, EyeOff, Clock } from 'lucide-react';
+import { Download, Trash2, AlertTriangle, Shield, Database, FileText, Lock, Eye, EyeOff, Clock, Archive } from 'lucide-react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import { notifySuccess, notifyError } from '../utils/notifications';
@@ -24,6 +24,13 @@ const DatabaseExport = () => {
     const [isClearing, setIsClearing]           = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [confirmCode, setConfirmCode]         = useState('');
+
+    /* ── archive state ── */
+    const [archiveTimeframe, setArchiveTimeframe] = useState('1_year');
+    const [isArchiving, setIsArchiving]           = useState(false);
+    const [isDeletingArchive, setIsDeletingArchive] = useState(false);
+    const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+    const [archiveConfirmCode, setArchiveConfirmCode] = useState('');
 
     const lockTimer      = useRef(null);
     const countdownTimer = useRef(null);
@@ -149,6 +156,52 @@ const DatabaseExport = () => {
         }
     };
 
+    /* ── archive / download JSON ── */
+    const handleDownloadArchive = async () => {
+        try {
+            setIsArchiving(true);
+            const token = localStorage.getItem('inventory_token');
+            const response = await axios.get(`/api/export/download-archive?timeframe=${archiveTimeframe}`, {
+                headers: { Authorization: `Bearer ${token}` },
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `archive_${archiveTimeframe}_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            notifySuccess('Archive generated and downloaded!');
+        } catch (error) {
+            console.error('Archive download error:', error);
+            notifyError('Archive generation failed. Please try again.');
+        } finally {
+            setIsArchiving(false);
+        }
+    };
+
+    /* ── archive delete ── */
+    const handleDeleteArchive = async () => {
+        try {
+            setIsDeletingArchive(true);
+            const token = localStorage.getItem('inventory_token');
+            await axios.post(
+                '/api/export/delete-archive',
+                { timeframe: archiveTimeframe, confirmCode: 'DELETE_MY_DATA' },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            notifySuccess('Archived data deleted successfully!');
+            setShowArchiveConfirm(false);
+            setArchiveConfirmCode('');
+        } catch (error) {
+            notifyError('Failed to delete archive: ' + (error.response?.data?.message || error.message));
+        } finally {
+            setIsDeletingArchive(false);
+        }
+    };
+
     /* ══════════════════════════════════════════════════════════
        RENDER
     ══════════════════════════════════════════════════════════ */
@@ -192,6 +245,94 @@ const DatabaseExport = () => {
                                     <Download size={20} />
                                     {isExporting ? 'Exporting...' : 'Download CSV'}
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Archive Section */}
+                    <div className="archive-section" style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+                        <div className="action-card warning-card">
+                            <div className="action-header">
+                                <Archive size={32} className="icon-warning" style={{ color: '#f59e0b', background: '#fef3c7', padding: '8px', borderRadius: '8px' }} />
+                                <div>
+                                    <h3>Data Archive & Cleanup</h3>
+                                    <p>Download and delete old records to free up space</p>
+                                </div>
+                            </div>
+                            <div className="action-content">
+                                <div className="archive-controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                    <label style={{ fontWeight: '500', color: '#475569' }}>Select Timeframe:</label>
+                                    <select 
+                                        value={archiveTimeframe} 
+                                        onChange={(e) => setArchiveTimeframe(e.target.value)}
+                                        className="archive-select"
+                                        style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', background: 'white', flex: 1, color: '#1e293b' }}
+                                    >
+                                        <option value="1_month">Older than 1 Month</option>
+                                        <option value="6_months">Older than 6 Months</option>
+                                        <option value="1_year">Older than 1 Year</option>
+                                        <option value="2_years">Older than 2 Years</option>
+                                    </select>
+                                </div>
+                                <div className="data-preview archive-info">
+                                    <h4>What gets archived/deleted:</h4>
+                                    <ul>
+                                        <li>📦 <b>Products</b> will <span style={{color: '#10b981', fontWeight: 'bold'}}>NEVER</span> be deleted.</li>
+                                        <li>👥 <b>Customers & Suppliers</b> with outstanding balances will <span style={{color: '#10b981', fontWeight: 'bold'}}>NEVER</span> be deleted.</li>
+                                        <li>🗑️ Only fully paid transactions, expenses, & returned sales will be archived.</li>
+                                    </ul>
+                                </div>
+                                
+                                <div className="archive-btn-group" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
+                                    <button 
+                                        className="btn-export" 
+                                        onClick={handleDownloadArchive} 
+                                        disabled={isArchiving}
+                                        style={{ width: '100%', background: '#f59e0b', color: 'white', border: 'none' }}
+                                    >
+                                        <Download size={20} />
+                                        {isArchiving ? 'Generating...' : 'Download JSON Archive'}
+                                    </button>
+
+                                    {!showArchiveConfirm ? (
+                                        <button 
+                                            className="btn-danger" 
+                                            onClick={() => setShowArchiveConfirm(true)} 
+                                            disabled={isDeletingArchive}
+                                            style={{ width: '100%' }}
+                                        >
+                                            <Trash2 size={20} /> Delete Archived Data
+                                        </button>
+                                    ) : (
+                                        <div className="confirm-box archive-confirm">
+                                            <h4>Type "DELETE_MY_DATA" to confirm deletion of {archiveTimeframe.replace('_', ' ')} data:</h4>
+                                            <input
+                                                type="text"
+                                                value={archiveConfirmCode}
+                                                onChange={(e) => setArchiveConfirmCode(e.target.value)}
+                                                placeholder="DELETE_MY_DATA"
+                                                className="confirm-input"
+                                            />
+                                            <div className="confirm-buttons">
+                                                <button
+                                                    className="btn-cancel"
+                                                    onClick={() => { setShowArchiveConfirm(false); setArchiveConfirmCode(''); }}
+                                                    disabled={isDeletingArchive}
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    className="btn-confirm-danger"
+                                                    onClick={handleDeleteArchive}
+                                                    disabled={isDeletingArchive || archiveConfirmCode !== 'DELETE_MY_DATA'}
+                                                >
+                                                    <Trash2 size={20} />
+                                                    {isDeletingArchive ? 'Deleting...' : 'Confirm Delete'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
