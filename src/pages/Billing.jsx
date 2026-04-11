@@ -833,7 +833,48 @@ const Billing = () => {
                 <div className="cart-section glass-panel">
                     <h3 className="section-title flex items-center justify-between">
                         <span>Current Items</span>
-                        <span className="item-count">{cart.length} items</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span className="item-count">{cart.length} items</span>
+                            {(cart.length > 0 || customerName || companyName || buyerPhone) && (
+                                <button
+                                    onClick={() => {
+                                        skipAutosave.current = true;
+                                        setCart([]);
+                                        setCustomerName('');
+                                        setCompanyName('');
+                                        setBuyerPhone('');
+                                        setPaidAmount('0');
+                                        setCashAmount('');
+                                        setOnlineAmount('');
+                                        setPaymentMethod('Cash');
+                                        setBillType('original');
+                                        setIsEditingGeneratedBill(false);
+                                        setSelectedProduct('');
+                                        setProductSearchTerm('');
+                                        setQuantity(1);
+                                        setError(null);
+                                        localStorage.removeItem('current_billing_draft');
+                                        setTimeout(() => { skipAutosave.current = false; }, 300);
+                                    }}
+                                    style={{
+                                        background: 'rgba(239,68,68,0.15)',
+                                        border: '1px solid rgba(239,68,68,0.4)',
+                                        borderRadius: '6px',
+                                        color: '#ef4444',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 600,
+                                        padding: '4px 10px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '5px'
+                                    }}
+                                    title="Clear all cart items and inputs"
+                                >
+                                    <Trash2 size={12} /> Cancel Bill
+                                </button>
+                            )}
+                        </div>
                     </h3>
 
                     <div className="cart-items">
@@ -1006,65 +1047,73 @@ const Billing = () => {
                             <span>{loading ? 'Processing...' : 'Download & Save'}</span>
                         </button>
                     </div>
+
+                    {/* Recent Bill compact inline row */}
+                    {recentGeneratedBill && !isEditingGeneratedBill && (
+                        <div style={{
+                            marginTop: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            background: 'rgba(99, 102, 241, 0.08)',
+                            border: '1px solid rgba(99, 102, 241, 0.25)',
+                            borderRadius: '10px',
+                            padding: '10px 14px'
+                        }}>
+                            <Receipt size={15} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    <strong style={{ color: 'var(--text-primary)' }}>{recentGeneratedBill.customerName || 'Walk-in'}</strong>
+                                    {' — '}{recentGeneratedBill.cart?.length || 0} items, Rs.&nbsp;
+                                    {(recentGeneratedBill.cart || []).reduce((s, it) => s + (it.price * it.quantity), 0).toLocaleString()}
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    skipAutosave.current = true;
+                                    setCart(recentGeneratedBill.cart || []);
+                                    setCustomerName(recentGeneratedBill.customerName || '');
+                                    setCompanyName(recentGeneratedBill.companyName || '');
+                                    setBuyerPhone(recentGeneratedBill.buyerPhone || '');
+                                    setBillType(recentGeneratedBill.billType || 'original');
+                                    setPaidAmount(recentGeneratedBill.paidAmount || '0');
+                                    setPaymentMethod(recentGeneratedBill.paymentMethod || 'Cash');
+                                    setCashAmount(recentGeneratedBill.cashAmount || '');
+                                    setOnlineAmount(recentGeneratedBill.onlineAmount || '');
+                                    setIsEditingGeneratedBill(true);
+                                    setTimeout(() => { skipAutosave.current = false; }, 500);
+                                    alertSuccess('Recovered', 'Recent bill loaded into editor!');
+                                }}
+                                style={{
+                                    background: 'var(--accent-primary)',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    color: '#fff',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 600,
+                                    padding: '5px 10px',
+                                    cursor: 'pointer',
+                                    whiteSpace: 'nowrap',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px'
+                                }}
+                            >
+                                <RefreshCw size={12} /> Edit
+                            </button>
+                            <button
+                                onClick={() => { localStorage.removeItem('recent_billing_data'); setRecentGeneratedBill(null); }}
+                                title="Clear"
+                                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* --- RECENT SAVED BILL FLOATING SIDEBOX --- */}
-            {recentGeneratedBill && !isEditingGeneratedBill && (
-                <div className="recent-bill-float glass-panel" style={{
-                    position: 'fixed',
-                    bottom: '30px',
-                    right: '30px',
-                    width: '340px',
-                    zIndex: 1000,
-                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
-                    border: '1px solid var(--accent-primary)',
-                    animation: 'slideUp 0.4s ease-out'
-                }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>
-                        <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', fontSize: '1.05rem' }}>
-                            <Receipt size={18} /> Recent Print
-                        </h4>
-                        <button 
-                            onClick={() => { localStorage.removeItem('recent_billing_data'); setRecentGeneratedBill(null); }} 
-                            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
-                            title="Clear recent bill cache"
-                        >
-                            <Trash2 size={16} />
-                        </button>
-                    </div>
-                    <div style={{ marginBottom: '16px' }}>
-                        <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '1.1rem', marginBottom: '4px' }}>
-                            {recentGeneratedBill.customerName || 'Walk-in Customer'}
-                        </div>
-                        <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                            {recentGeneratedBill.cart?.length || 0} items • Rs. {(recentGeneratedBill.cart || []).reduce((s, it) => s + (it.price * it.quantity), 0).toLocaleString()}
-                        </div>
-                    </div>
-                    <button 
-                        className="btn-primary" 
-                        style={{ width: '100%', padding: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }} 
-                        onClick={() => {
-                            skipAutosave.current = true;
-                            setCart(recentGeneratedBill.cart || []);
-                            setCustomerName(recentGeneratedBill.customerName || '');
-                            setCompanyName(recentGeneratedBill.companyName || '');
-                            setBuyerPhone(recentGeneratedBill.buyerPhone || '');
-                            setBillType(recentGeneratedBill.billType || 'original');
-                            setPaidAmount(recentGeneratedBill.paidAmount || '0');
-                            setPaymentMethod(recentGeneratedBill.paymentMethod || 'Cash');
-                            setCashAmount(recentGeneratedBill.cashAmount || '');
-                            setOnlineAmount(recentGeneratedBill.onlineAmount || '');
-                            setIsEditingGeneratedBill(true);
-                            setTimeout(() => { skipAutosave.current = false; }, 500);
-                            
-                            alertSuccess('Recovered', 'Recent bill loaded into editor!');
-                        }}
-                    >
-                        <RefreshCw size={16} /> Edit Generated Bill
-                    </button>
-                </div>
-            )}
+
         </div >
     );
 };
