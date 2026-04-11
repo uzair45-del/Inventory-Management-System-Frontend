@@ -268,6 +268,7 @@ const DatabaseExport = () => {
                                         className="archive-select"
                                         style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', outline: 'none', background: 'white', flex: 1, color: '#1e293b' }}
                                     >
+                                        <option value="1_week">Older than 1 Week (Test)</option>
                                         <option value="1_month">Older than 1 Month</option>
                                         <option value="6_months">Older than 6 Months</option>
                                         <option value="1_year">Older than 1 Year</option>

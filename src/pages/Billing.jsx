@@ -31,6 +31,11 @@ const Billing = () => {
     const [cashAmount, setCashAmount] = useState('');
     const [onlineAmount, setOnlineAmount] = useState('');
 
+    // Recent generated bill recovery
+    const [recentGeneratedBill, setRecentGeneratedBill] = useState(null);
+    const [isEditingGeneratedBill, setIsEditingGeneratedBill] = useState(false);
+    const skipAutosave = useRef(false);
+
     const receiptRef = useRef();
 
     const handleDownloadPdf = async () => {
@@ -92,7 +97,64 @@ const Billing = () => {
     useEffect(() => {
         fetchProducts();
         fetchCustomers();
+
+        // Load recent generated bill for the side panel
+        const savedRecent = localStorage.getItem('recent_billing_data');
+        if (savedRecent) {
+            try {
+                setRecentGeneratedBill(JSON.parse(savedRecent));
+            } catch (e) { console.error('Failed to parse recent bill', e); }
+        }
+
+        // Load auto-saved draft if exists
+        const savedDraft = localStorage.getItem('current_billing_draft');
+        if (savedDraft) {
+            try {
+                skipAutosave.current = true;
+                const draft = JSON.parse(savedDraft);
+                setCart(draft.cart || []);
+                setCustomerName(draft.customerName || '');
+                setCompanyName(draft.companyName || '');
+                setBuyerPhone(draft.buyerPhone || '');
+                setBillType(draft.billType || 'original');
+                setPaidAmount(draft.paidAmount || '0');
+                setPaymentMethod(draft.paymentMethod || 'Cash');
+                setCashAmount(draft.cashAmount || '');
+                setOnlineAmount(draft.onlineAmount || '');
+                setIsEditingGeneratedBill(draft.isEditingGeneratedBill || false);
+                
+                setTimeout(() => { skipAutosave.current = false; }, 500);
+            } catch (e) { 
+                console.error('Failed to parse draft', e); 
+                skipAutosave.current = false;
+            }
+        }
     }, []);
+
+    // Continuously auto-save the active draft (debounced slightly by React batching)
+    useEffect(() => {
+        if (skipAutosave.current) return;
+        
+        const draftObj = {
+            cart,
+            customerName,
+            companyName,
+            buyerPhone,
+            billType,
+            paidAmount,
+            paymentMethod,
+            cashAmount,
+            onlineAmount,
+            isEditingGeneratedBill
+        };
+        
+        if (cart.length > 0 || customerName) {
+            localStorage.setItem('current_billing_draft', JSON.stringify(draftObj));
+        } else {
+            // If completely empty, remove draft
+            localStorage.removeItem('current_billing_draft');
+        }
+    }, [cart, customerName, companyName, buyerPhone, billType, paidAmount, paymentMethod, cashAmount, onlineAmount, isEditingGeneratedBill]);
 
     const fetchProducts = async () => {
         try {
@@ -215,7 +277,23 @@ const Billing = () => {
                 if (!buyerId) throw new Error('Failed to create customer');
             }
 
+            // If editing an already generated bill, erase the old transactions cleanly first
+            if (isEditingGeneratedBill && recentGeneratedBill?.cart) {
+                for (const oldItem of recentGeneratedBill.cart) {
+                    if (oldItem.txn_id) {
+                        try {
+                            await axios.delete(`/api/sales/${oldItem.txn_id}`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                            });
+                        } catch (e) {
+                            console.error('Failed to erase previous transaction line', e);
+                        }
+                    }
+                }
+            }
+
             // ===== Process each cart item as a sale =====
+            const generatedCartItems = [...cart];
             const actualBillType = billType === 'credit' ? 'CREDIT' : 'REAL';
             const userPaid = billType === 'credit' ? Number(paidAmount || 0) : null;
             const lowStockAlerts = [];
@@ -267,9 +345,12 @@ const Billing = () => {
                     online_amount: thisOnline
                 };
 
-                await axios.post('/api/sales', saleData, {
+                const res = await axios.post('/api/sales', saleData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+
+                // Attach ID to item for future recovery/editing
+                generatedCartItems[i].txn_id = res.data.data?.id;
 
                 const newRemaining = item.remaining_quantity - item.quantity;
                 const threshold = item.low_stock_threshold !== undefined && item.low_stock_threshold !== null ? item.low_stock_threshold : 10;
@@ -291,6 +372,18 @@ const Billing = () => {
                 }, 500);
             }
 
+            // Save the successfully captured final bill to Local Storage
+            const savedBillObj = {
+                cart: generatedCartItems, // with txn_ids!
+                customerName, companyName, buyerPhone, billType, paidAmount, paymentMethod, cashAmount, onlineAmount,
+                isEditingGeneratedBill: false // Reset flag inside cache
+            };
+            localStorage.setItem('recent_billing_data', JSON.stringify(savedBillObj));
+            setRecentGeneratedBill(savedBillObj);
+
+            // Clean up UI
+            skipAutosave.current = true;
+            setIsEditingGeneratedBill(false);
             setCart([]);
             setCustomerName('');
             setCompanyName('');
@@ -298,6 +391,9 @@ const Billing = () => {
             setPaidAmount('0');
             setCashAmount('');
             setOnlineAmount('');
+            localStorage.removeItem('current_billing_draft');
+            setTimeout(() => { skipAutosave.current = false; }, 500);
+            
             fetchProducts();
             fetchCustomers();
         } catch (err) {
@@ -361,9 +457,29 @@ const Billing = () => {
         <div className="billing-container">
             {/* Left Panel: Entry */}
             <div className="billing-entry-panel">
-                <div className="panel-header">
-                    <h1 className="page-title">Generate Bill</h1>
-                    <p className="page-subtitle">Create a new invoice for customer</p>
+                <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                        <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            {isEditingGeneratedBill ? <span style={{color: '#f59e0b'}}>Editing Printed Bill</span> : 'Generate Bill'}
+                        </h1>
+                        <p className="page-subtitle">
+                            {isEditingGeneratedBill ? 'Changes will completely replace the previous bill' : 'Create a new invoice for customer'}
+                        </p>
+                    </div>
+                    {isEditingGeneratedBill && (
+                        <button 
+                            className="btn-danger" 
+                            style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+                            onClick={() => {
+                                setIsEditingGeneratedBill(false);
+                                setCart([]);
+                                localStorage.removeItem('current_billing_draft');
+                                alertSuccess('Cancelled', 'Returned to new blank bill');
+                            }}
+                        >
+                            Cancel Editing
+                        </button>
+                    )}
                 </div>
 
                 {error && <div className="error-message">{error}</div>}
@@ -892,6 +1008,63 @@ const Billing = () => {
                     </div>
                 </div>
             </div>
+
+            {/* --- RECENT SAVED BILL FLOATING SIDEBOX --- */}
+            {recentGeneratedBill && !isEditingGeneratedBill && (
+                <div className="recent-bill-float glass-panel" style={{
+                    position: 'fixed',
+                    bottom: '30px',
+                    right: '30px',
+                    width: '340px',
+                    zIndex: 1000,
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+                    border: '1px solid var(--accent-primary)',
+                    animation: 'slideUp 0.4s ease-out'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px' }}>
+                        <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', fontSize: '1.05rem' }}>
+                            <Receipt size={18} /> Recent Print
+                        </h4>
+                        <button 
+                            onClick={() => { localStorage.removeItem('recent_billing_data'); setRecentGeneratedBill(null); }} 
+                            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                            title="Clear recent bill cache"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                    <div style={{ marginBottom: '16px' }}>
+                        <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '1.1rem', marginBottom: '4px' }}>
+                            {recentGeneratedBill.customerName || 'Walk-in Customer'}
+                        </div>
+                        <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                            {recentGeneratedBill.cart?.length || 0} items • Rs. {(recentGeneratedBill.cart || []).reduce((s, it) => s + (it.price * it.quantity), 0).toLocaleString()}
+                        </div>
+                    </div>
+                    <button 
+                        className="btn-primary" 
+                        style={{ width: '100%', padding: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }} 
+                        onClick={() => {
+                            skipAutosave.current = true;
+                            setCart(recentGeneratedBill.cart || []);
+                            setCustomerName(recentGeneratedBill.customerName || '');
+                            setCompanyName(recentGeneratedBill.companyName || '');
+                            setBuyerPhone(recentGeneratedBill.buyerPhone || '');
+                            setBillType(recentGeneratedBill.billType || 'original');
+                            setPaidAmount(recentGeneratedBill.paidAmount || '0');
+                            setPaymentMethod(recentGeneratedBill.paymentMethod || 'Cash');
+                            setCashAmount(recentGeneratedBill.cashAmount || '');
+                            setOnlineAmount(recentGeneratedBill.onlineAmount || '');
+                            setIsEditingGeneratedBill(true);
+                            setTimeout(() => { skipAutosave.current = false; }, 500);
+                            
+                            alertSuccess('Recovered', 'Recent bill loaded into editor!');
+                        }}
+                    >
+                        <RefreshCw size={16} /> Edit Generated Bill
+                    </button>
+                </div>
+            )}
         </div >
     );
 };
