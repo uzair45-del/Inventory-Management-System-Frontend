@@ -104,11 +104,12 @@ const Suppliers = () => {
     const filteredSuppliers = suppliers
         .filter(supplier => {
             const matchesSearch = supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (supplier.company_name && supplier.company_name.toLowerCase().includes(searchQuery.toLowerCase()));
+                (supplier.company_name && supplier.company_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (supplier.phone && supplier.phone.includes(searchQuery));
             
             if(!matchesSearch) return false;
 
-            const remaining = Number(supplier.total_amount || 0) - Number(supplier.paid_amount || 0);
+            const remaining = (supplier.supplier_transactions || []).reduce((acc, t) => acc + (Number(t.total_amount || 0) - Number(t.paid_amount || 0)), 0);
 
             if (filterOption === 'pending_udhar') return remaining > 0;
             if (filterOption === 'cleared') return remaining <= 0;
@@ -118,8 +119,8 @@ const Suppliers = () => {
             return true;
         })
         .sort((a, b) => {
-            const aRemaining = Number(a.total_amount || 0) - Number(a.paid_amount || 0);
-            const bRemaining = Number(b.total_amount || 0) - Number(b.paid_amount || 0);
+            const aRemaining = (a.supplier_transactions || []).reduce((acc, t) => acc + (Number(t.total_amount || 0) - Number(t.paid_amount || 0)), 0);
+            const bRemaining = (b.supplier_transactions || []).reduce((acc, t) => acc + (Number(t.total_amount || 0) - Number(t.paid_amount || 0)), 0);
             
             if (sortOption === 'name_asc') return a.name.localeCompare(b.name);
             if (sortOption === 'name_desc') return b.name.localeCompare(a.name);
