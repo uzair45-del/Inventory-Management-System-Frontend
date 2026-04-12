@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import { User, Mail, Lock, UserPlus, LayoutDashboard, ShieldAlert } from 'lucide-react';
 import './Signup.css';
 
@@ -18,7 +18,7 @@ const Signup = () => {
     useEffect(() => {
         const checkDeveloper = async () => {
             try {
-                const response = await axios.get('/api/auth/check-developer');
+                const response = await api.get('/api/auth/check-developer');
                 setDevExists(response.data.exists);
             } catch {
                 setDevExists(false);
@@ -45,7 +45,7 @@ const Signup = () => {
 
         setLoading(true);
         try {
-            const response = await axios.post('/api/auth/signup', {
+            const response = await api.post('/api/auth/signup', {
                 name,
                 email,
                 password

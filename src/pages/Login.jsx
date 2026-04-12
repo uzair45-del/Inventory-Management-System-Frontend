@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import { Mail, Lock, LogIn, LayoutDashboard } from 'lucide-react';
 import './Login.css';
 
@@ -25,7 +25,7 @@ const Login = () => {
                     : '/api/auth/login-salesman';
 
                 console.log(`Sending login request to ${endpoint}...`, { email: email });
-                const response = await axios.post(endpoint, { email, password });
+                const response = await api.post(endpoint, { email, password });
                 console.log('Login response:', response.data);
 
                 // Backend returns: { _id, name, email, role, token }
