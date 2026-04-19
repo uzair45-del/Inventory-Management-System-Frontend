@@ -1,9 +1,4 @@
 {
-  "build": {
-    "env": {
-      "VITE_API_URL": "https://inventory-management-system-nrrx.onrender.com"
-    }
-  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
