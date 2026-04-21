@@ -123,7 +123,8 @@ const RecentSales = () => {
             const withinDate = saleDate >= threshold;
             const matchesSearch =
                 (sale.products?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (sale.buyers?.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+                (sale.buyers?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (sale.product_id && String(sale.product_id).toLowerCase().includes(searchQuery.toLowerCase()));
             
             if (!(withinDate && matchesSearch)) return false;
 
@@ -304,6 +305,7 @@ const RecentSales = () => {
                         <thead>
                             <tr>
                                 <th>#</th>
+                                <th>Product ID</th>
                                 <th>Invoice ID</th>
                                 <th>Date</th>
                                 <th>Product</th>
@@ -326,11 +328,11 @@ const RecentSales = () => {
                                 return (
                                     <tr key={sale.id} className="animate-fade-in">
                                         <td>{itemIndex}</td>
+                                        <td style={{ fontFamily: 'monospace', fontWeight: 500 }}>{formatProductId(sale.product_id) || '-'}</td>
                                         <td style={{ fontFamily: 'monospace', color: 'var(--accent-primary)', fontWeight: 600 }}>#{sale.id}</td>
                                         <td>{sale.purchase_date ? new Date(sale.purchase_date).toLocaleDateString() : '-'}</td>
                                         <td>
                                             <div className="font-medium">{sale.products?.name || '-'}</div>
-                                            <div style={{ fontSize: '0.7em', color: '#666', marginTop: '2px' }}>{formatProductId(sale.product_id)}</div>
                                         </td>
                                         <td>Rs. {Number(sale.products?.price || 0).toLocaleString()}</td>
                                         <td>{sale.products?.purchased_from || '-'}</td>
