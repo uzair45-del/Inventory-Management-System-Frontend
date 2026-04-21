@@ -33,6 +33,7 @@ const Suppliers = () => {
         name: '',
         phone: '',
         company_name: '',
+        category: '',
         payment_amount: '',
         txn_due: 0,
         product_id: '',
@@ -116,6 +117,9 @@ const Suppliers = () => {
             if (filterOption === 'method_cash') return supplier.supplier_transactions?.some(t => t.payment_method === 'Cash');
             if (filterOption === 'method_online') return supplier.supplier_transactions?.some(t => t.payment_method === 'Online');
             if (filterOption === 'method_split') return supplier.supplier_transactions?.some(t => t.payment_method === 'Split');
+            if (filterOption === 'cat_hardware') return supplier.category === 'Hardware';
+            if (filterOption === 'cat_electric') return supplier.category === 'Electric';
+            if (filterOption === 'cat_paint') return supplier.category === 'Paint';
             return true;
         })
         .sort((a, b) => {
@@ -178,6 +182,7 @@ const Suppliers = () => {
             name: '',
             phone: '',
             company_name: '',
+            category: '',
             payment_amount: '',
             txn_due: 0,
             product_id: '',
@@ -214,6 +219,7 @@ const Suppliers = () => {
             name: row.name,
             phone: row.phone || '',
             company_name: row.company_name || '',
+            category: row.category || '',
             payment_amount: '',
             txn_due: txnDue,
 
@@ -303,7 +309,8 @@ const Suppliers = () => {
                 const payload = {
                     name: formData.name,
                     phone: formData.phone,
-                    company_name: formData.company_name
+                    company_name: formData.company_name,
+                    category: formData.category
                 };
 
                 const newItem = {
@@ -377,7 +384,8 @@ const Suppliers = () => {
             const payload = {
                 name: formData.name,
                 phone: formData.phone,
-                company_name: formData.company_name
+                company_name: formData.company_name,
+                category: formData.category
             };
 
             let splitCash = 0;
@@ -671,7 +679,10 @@ const Suppliers = () => {
                                 { value: "cleared", label: "Cleared" },
                                 { value: "method_cash", label: "Paid in Cash" },
                                 { value: "method_online", label: "Paid in Online" },
-                                { value: "method_split", label: "Split Payment" }
+                                { value: "method_split", label: "Split Payment" },
+                                { value: "cat_hardware", label: "Category: Hardware" },
+                                { value: "cat_electric", label: "Category: Electric" },
+                                { value: "cat_paint", label: "Category: Paint" }
                             ]}
                         />
                         <CustomDropdown 
@@ -736,9 +747,25 @@ const Suppliers = () => {
                                     <input type="text" className="input-field" name="phone" value={formData.phone} onChange={handleFormChange} />
                                 </div>
                             </div>
-                            <div className="input-group">
-                                <label>Company Name (Optional)</label>
-                                <input type="text" className="input-field" name="company_name" value={formData.company_name} onChange={handleFormChange} />
+                            <div className="form-grid">
+                                <div className="input-group">
+                                    <label>Company Name (Optional)</label>
+                                    <input type="text" className="input-field" name="company_name" value={formData.company_name} onChange={handleFormChange} />
+                                </div>
+                                <div className="input-group">
+                                    <label>Category</label>
+                                    <CustomDropdown 
+                                        className="minimal-select"
+                                        value={formData.category}
+                                        onChange={(e) => handleFormChange({ target: { name: 'category', value: e.target.value } })}
+                                        options={[
+                                            { value: "", label: "Select Category" },
+                                            { value: "Hardware", label: "Hardware" },
+                                            { value: "Electric", label: "Electric" },
+                                            { value: "Paint", label: "Paint" }
+                                        ]}
+                                    />
+                                </div>
                             </div>
 
                             {/* Generic supplier payment — edit mode with outstanding due */}

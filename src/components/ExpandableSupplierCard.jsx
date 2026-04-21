@@ -33,6 +33,9 @@ const ExpandableSupplierCard = ({
                         {supplier.company_name && (
                             <p className="supplier-company">{supplier.company_name}</p>
                         )}
+                        {supplier.category && (
+                            <span className="supplier-category-badge">{supplier.category}</span>
+                        )}
                         {supplier.phone && (
                             <p className="supplier-phone">
                                 <Phone size={16} />
@@ -100,6 +103,10 @@ const ExpandableSupplierCard = ({
                         <div className="detail-row">
                             <span className="detail-label">Company:</span>
                             <span className="detail-value">{supplier.company_name || 'N/A'}</span>
+                        </div>
+                        <div className="detail-row">
+                            <span className="detail-label">Category:</span>
+                            <span className="detail-value">{supplier.category || 'N/A'}</span>
                         </div>
                     </div>
 
