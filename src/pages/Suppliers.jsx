@@ -259,7 +259,6 @@ const Suppliers = () => {
             const newData = { ...prev, [name]: value };
 
             // Auto-calculate total_amount = unit_price × quantity
-            // This applies to both 'add' and 'edit' (when adding a new transaction)
             if (name === 'quantity' || name === 'unit_price') {
                 const qty = parseInt(newData.quantity);
                 const price = Number(newData.unit_price);
@@ -270,9 +269,39 @@ const Suppliers = () => {
                 }
             }
 
+            // ── Split Payment Auto-Calculation ──────────────────────────────
+            // Determines the "total paid" depending on which context we're in:
+            //   • Generic supplier payment  → payment_amount
+            //   • Add mode / new txn        → paid_amount
+            //   • Edit existing txn         → add_payment
+            if (newData.payment_method === 'Split') {
+                const totalPaid =
+                    Number(newData.payment_amount) > 0
+                        ? Number(newData.payment_amount)
+                        : Number(newData.add_payment) > 0
+                            ? Number(newData.add_payment)
+                            : Number(newData.paid_amount) > 0
+                                ? Number(newData.paid_amount)
+                                : 0;
+
+                if (totalPaid > 0) {
+                    if (name === 'cash_amount') {
+                        const cashVal = Math.min(Math.max(Number(value) || 0, 0), totalPaid);
+                        newData.cash_amount = cashVal;
+                        newData.online_amount = parseFloat((totalPaid - cashVal).toFixed(2));
+                    } else if (name === 'online_amount') {
+                        const onlineVal = Math.min(Math.max(Number(value) || 0, 0), totalPaid);
+                        newData.online_amount = onlineVal;
+                        newData.cash_amount = parseFloat((totalPaid - onlineVal).toFixed(2));
+                    }
+                }
+            }
+            // ────────────────────────────────────────────────────────────────
+
             return newData;
         });
     };
+
 
     const handleProductSelect = (product) => {
         setProductSearch(product.name);
