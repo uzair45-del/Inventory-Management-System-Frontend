@@ -2,20 +2,20 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Truck, Edit, Trash2, Phone, Building, Package, DollarSign, CheckCircle, AlertCircle } from 'lucide-react';
 import './ExpandableSupplierCard.css';
 
-const ExpandableSupplierCard = ({ 
-    supplier, 
-    onEdit, 
+const ExpandableSupplierCard = ({
+    supplier,
+    onEdit,
     onDelete
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    
+
     // Calculate totals
     const transactions = supplier.supplier_transactions || [];
     const totalPurchases = transactions.reduce((sum, txn) => sum + Number(txn.total_amount || 0), 0);
     const totalPaid = transactions.reduce((sum, txn) => sum + Number(txn.paid_amount || 0), 0);
     const totalDue = totalPurchases - totalPaid;
     const hasDue = totalDue > 0;
-    
+
     const toggleExpand = () => {
         setIsExpanded(!isExpanded);
     };
@@ -44,7 +44,7 @@ const ExpandableSupplierCard = ({
                         )}
                     </div>
                 </div>
-                
+
                 <div className="supplier-summary">
                     <div className="summary-amount">
                         <span className={`amount ${hasDue ? 'due' : 'clear'}`}>
@@ -72,7 +72,7 @@ const ExpandableSupplierCard = ({
                                 <span className="box-value">Rs. {totalPurchases.toLocaleString()}</span>
                             </div>
                         </div>
-                        
+
                         <div className="summary-box success">
                             <div className="box-icon">
                                 <DollarSign size={16} />
@@ -82,7 +82,7 @@ const ExpandableSupplierCard = ({
                                 <span className="box-value">Rs. {totalPaid.toLocaleString()}</span>
                             </div>
                         </div>
-                        
+
                         <div className={`summary-box ${hasDue ? 'danger' : 'success'}`}>
                             <div className="box-icon">
                                 {hasDue ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
@@ -123,7 +123,7 @@ const ExpandableSupplierCard = ({
                                     const purchaseRate = txn.quantity > 0 ? Math.round(Number(txn.total_amount) / Number(txn.quantity)) : 0;
                                     const remaining = Number(txn.total_amount || 0) - Number(txn.paid_amount || 0);
                                     const isPaid = remaining <= 0;
-                                    
+
                                     return (
                                         <div key={txn.id || idx} className="transaction-card">
                                             <div className="transaction-header">
