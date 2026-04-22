@@ -8,6 +8,7 @@ const ExpandableSupplierCard = ({
     onDelete
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [showPhone, setShowPhone] = useState(false);
 
     // Calculate totals
     const transactions = supplier.supplier_transactions || [];
@@ -37,9 +38,9 @@ const ExpandableSupplierCard = ({
                             <span className="supplier-category-badge">{supplier.category}</span>
                         )}
                         {supplier.phone && (
-                            <p className="supplier-phone">
-                                <Phone size={16} />
-                                {supplier.phone}
+                            <p className="supplier-phone" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }} onClick={(e) => { e.stopPropagation(); setShowPhone(!showPhone); }}>
+                                <Phone size={14} />
+                                {showPhone ? supplier.phone : supplier.phone.replace(/./g, '*')}
                             </p>
                         )}
                     </div>
