@@ -130,11 +130,23 @@ const ExpandableSupplierCard = ({
                                         <div key={txn.id || idx} className="transaction-card">
                                             {/* Header */}
                                             <div className="transaction-header">
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                     <span className="product-name">{displayProductName}</span>
-                                                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                                        🗓 {txn.purchase_date ? new Date(txn.purchase_date).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
-                                                    </span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                                            🗓 {txn.purchase_date ? new Date(txn.purchase_date).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                                                        </span>
+                                                        {txn.payment_method && (
+                                                            <span className={`payment-badge ${txn.payment_method.toLowerCase()}`} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: '4px' }}>
+                                                                {txn.payment_method === 'Cash' ? '💵' : txn.payment_method === 'Online' ? '📱' : '🔀'} {txn.payment_method}
+                                                                {txn.payment_method === 'Split' && (
+                                                                    <span style={{ marginLeft: '4px', opacity: 0.8 }}>
+                                                                        (C:{Number(txn.cash_amount||0).toLocaleString()} | O:{Number(txn.online_amount||0).toLocaleString()})
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <span className={`transaction-status ${isPaid ? 'paid' : 'due'}`}>
                                                     {isPaid ? '✓ Paid' : `Due: Rs. ${remaining.toLocaleString()}`}
