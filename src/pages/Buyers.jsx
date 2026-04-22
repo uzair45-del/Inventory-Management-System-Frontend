@@ -57,10 +57,17 @@ const Buyers = () => {
         online_amount: ''
     });
 
+    const [showPhones, setShowPhones] = useState({});
+    
     useEffect(() => {
         fetchBuyers();
         fetchProducts();
     }, []);
+
+    const togglePhone = (id, e) => {
+        e.stopPropagation();
+        setShowPhones(prev => ({ ...prev, [id]: !prev[id] }));
+    };
 
     const fetchProducts = async () => {
         try {
@@ -577,7 +584,13 @@ const Buyers = () => {
                                                     </span>
                                                 ) : '-'}
                                             </td>
-                                            <td><span className="text-secondary">{row.phone || '-'}</span></td>
+                                            <td onClick={(e) => togglePhone(row.id, e)} style={{ cursor: 'pointer' }}>
+                                                <span className="text-secondary" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    {row.phone 
+                                                        ? (showPhones[row.id] ? row.phone : row.phone.replace(/./g, '*')) 
+                                                        : '-'}
+                                                </span>
+                                            </td>
                                             <td><span className="text-secondary">{row.address || '-'}</span></td>
 
                                             {txn ? (
