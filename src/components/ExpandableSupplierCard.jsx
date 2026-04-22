@@ -110,10 +110,10 @@ const ExpandableSupplierCard = ({
                         </div>
                     </div>
 
-                    {/* Transaction History */}
+                    {/* Transaction & Payment History */}
                     {transactions.length > 0 && (
                         <div className="transaction-history">
-                            <h4 className="history-title">📦 PURCHASE HISTORY</h4>
+                            <h4 className="history-title">📦 PURCHASE & PAYMENT HISTORY</h4>
                             <div className="transactions-list">
                                 {transactions.map((txn, idx) => {
                                     const isOpeningBalance = txn.products?.name === '__opening_balance__';
@@ -123,28 +123,25 @@ const ExpandableSupplierCard = ({
                                     const purchaseRate = txn.quantity > 0 ? Math.round(Number(txn.total_amount) / Number(txn.quantity)) : 0;
                                     const remaining = Number(txn.total_amount || 0) - Number(txn.paid_amount || 0);
                                     const isPaid = remaining <= 0;
+                                    const payHistory = (txn.supplier_payment_history || [])
+                                        .slice().sort((a, b) => new Date(a.date) - new Date(b.date));
 
                                     return (
                                         <div key={txn.id || idx} className="transaction-card">
+                                            {/* Header */}
                                             <div className="transaction-header">
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                    <span className="product-name">
-                                                        {displayProductName}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                    <span className="product-name">{displayProductName}</span>
+                                                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                                        🗓 {txn.purchase_date ? new Date(txn.purchase_date).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
                                                     </span>
-                                                    {txn.payment_method && (
-                                                        <span className={`payment-badge ${txn.payment_method.toLowerCase()}`}>
-                                                            {txn.payment_method === 'Cash' ? '💵' : txn.payment_method === 'Online' ? '📱' : '🔀'}
-                                                            {txn.payment_method}
-                                                            {txn.payment_method === 'Split' && (
-                                                                <span className="split-detail">C:{txn.cash_amount} | O:{txn.online_amount}</span>
-                                                            )}
-                                                        </span>
-                                                    )}
                                                 </div>
                                                 <span className={`transaction-status ${isPaid ? 'paid' : 'due'}`}>
                                                     {isPaid ? '✓ Paid' : `Due: Rs. ${remaining.toLocaleString()}`}
                                                 </span>
                                             </div>
+
+                                            {/* Amounts */}
                                             <div className="transaction-details">
                                                 {!isOpeningBalance && (
                                                     <>
@@ -167,12 +164,49 @@ const ExpandableSupplierCard = ({
                                                     <span className="cell-value paid">Rs. {Number(txn.paid_amount).toLocaleString()}</span>
                                                 </div>
                                             </div>
+
+                                            {/* Payment Installments from history */}
+                                            {payHistory.length > 0 && (
+                                                <div style={{ marginTop: '8px', borderTop: '1px dashed var(--border-color)', paddingTop: '6px' }}>
+                                                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>
+                                                        💳 Payments
+                                                    </span>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '5px' }}>
+                                                        {payHistory.map((pay, pIdx) => (
+                                                            <div key={pay.id || pIdx} style={{
+                                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                                background: 'var(--bg-secondary)', borderRadius: '6px', padding: '5px 9px', fontSize: '0.78rem'
+                                                            }}>
+                                                                <span style={{ color: 'var(--text-muted)', minWidth: '90px' }}>
+                                                                    {pay.date ? new Date(pay.date).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                                                                </span>
+                                                                <span style={{ fontWeight: 700, color: '#4ade80' }}>
+                                                                    Rs. {Number(pay.amount_paid).toLocaleString()}
+                                                                </span>
+                                                                <span style={{
+                                                                    fontSize: '0.72rem', padding: '2px 7px', borderRadius: '5px', fontWeight: 600,
+                                                                    background: pay.payment_method === 'Cash' ? 'rgba(74,222,128,0.12)' : pay.payment_method === 'Online' ? 'rgba(56,189,248,0.12)' : 'rgba(251,191,36,0.12)',
+                                                                    color: pay.payment_method === 'Cash' ? '#4ade80' : pay.payment_method === 'Online' ? '#38bdf8' : '#fbbf24'
+                                                                }}>
+                                                                    {pay.payment_method === 'Cash' ? '💵' : pay.payment_method === 'Online' ? '📱' : '🔀'} {pay.payment_method}
+                                                                    {pay.payment_method === 'Split' && (
+                                                                        <span style={{ marginLeft: '4px', opacity: 0.8 }}>
+                                                                            (C:{Number(pay.cash_amount||0).toLocaleString()} | O:{Number(pay.online_amount||0).toLocaleString()})
+                                                                        </span>
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}
                             </div>
                         </div>
                     )}
+
 
                     {/* Action Buttons */}
                     <div className="card-actions">
