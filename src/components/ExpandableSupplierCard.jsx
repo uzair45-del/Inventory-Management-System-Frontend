@@ -99,7 +99,13 @@ const ExpandableSupplierCard = ({
                     <div className="supplier-details-expanded">
                         <div className="detail-row">
                             <span className="detail-label">Phone:</span>
-                            <span className="detail-value">{supplier.phone || 'N/A'}</span>
+                            <span 
+                                className="detail-value" 
+                                style={{ cursor: 'pointer' }}
+                                onClick={(e) => { e.stopPropagation(); setShowPhone(!showPhone); }}
+                            >
+                                {supplier.phone ? (showPhone ? supplier.phone : supplier.phone.replace(/./g, '*')) : 'N/A'}
+                            </span>
                         </div>
                         <div className="detail-row">
                             <span className="detail-label">Company:</span>
