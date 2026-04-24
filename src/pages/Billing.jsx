@@ -510,41 +510,11 @@ const Billing = () => {
                                 <input
                                     type="text"
                                     className="input-field"
-                                    placeholder={billType === 'credit' ? 'Enter customer name (required)' : 'Enter or pick customer'}
+                                    placeholder={billType === 'credit' ? 'Enter customer name (required)' : 'Enter customer name'}
                                     value={customerName}
-                                    onChange={(e) => { setCustomerName(e.target.value); setShowCustomerDropdown('customer'); }}
-                                    onFocus={() => setShowCustomerDropdown('customer')}
-                                    onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 150)}
+                                    onChange={(e) => setCustomerName(e.target.value)}
                                     required={billType === 'credit'}
                                 />
-                                {showCustomerDropdown === 'customer' && customers.filter(c =>
-                                    c.name.toLowerCase().includes(customerName.toLowerCase()) ||
-                                    (c.company_name && c.company_name.toLowerCase().includes(customerName.toLowerCase()))
-                                ).length > 0 && (
-                                        <div className="dropdown-options glass-panel" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100 }}>
-                                            {customers
-                                                .filter(c =>
-                                                    c.name.toLowerCase().includes(customerName.toLowerCase()) ||
-                                                    (c.company_name && c.company_name.toLowerCase().includes(customerName.toLowerCase()))
-                                                )
-                                                .map(c => (
-                                                    <div
-                                                        key={c.id}
-                                                        className="dropdown-option"
-                                                        onMouseDown={() => {
-                                                            setCustomerName(c.name);
-                                                            setCompanyName(c.company_name || '');
-                                                            setBuyerPhone(c.phone || '');
-                                                            setShowCustomerDropdown(false);
-                                                        }}
-                                                    >
-                                                        <strong>{c.name}</strong>
-                                                        {c.company_name && <span style={{ color: '#38bdf8', marginLeft: 8, fontSize: '0.85em' }}>🏢 {c.company_name}</span>}
-                                                    </div>
-                                                ))
-                                            }
-                                        </div>
-                                    )}
                             </div>
                         </div>
                     </div>
