@@ -422,7 +422,8 @@ const Buyers = () => {
     const flattenedData = useMemo(() => {
         let filtered = buyers.filter(buyer =>
             buyer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (buyer.company_name && buyer.company_name.toLowerCase().includes(searchQuery.toLowerCase()))
+            (buyer.company_name && buyer.company_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            String(buyer.id).includes(searchQuery)
         );
 
         let flattened = [];
@@ -504,7 +505,7 @@ const Buyers = () => {
                         <Search className="search-icon" size={20} />
                         <input
                             type="text"
-                            placeholder="Search customers by name or company..."
+                            placeholder="Search customers by ID, name or company..."
                             className="search-input"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
