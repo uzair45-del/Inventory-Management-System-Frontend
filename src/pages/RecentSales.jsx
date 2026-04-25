@@ -124,7 +124,8 @@ const RecentSales = () => {
             const matchesSearch =
                 (sale.products?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (sale.buyers?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (sale.product_id && String(sale.product_id).toLowerCase().includes(searchQuery.toLowerCase()));
+                (sale.product_id && String(sale.product_id).toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (sale.id && String(sale.id).toLowerCase().includes(searchQuery.toLowerCase()));
             
             if (!(withinDate && matchesSearch)) return false;
 
@@ -308,7 +309,7 @@ const RecentSales = () => {
                     <Search className="search-icon" size={20} />
                     <input
                         type="text"
-                        placeholder="Search by product or customer name..."
+                        placeholder="Search by invoice ID, product or customer..."
                         className="search-input"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -386,7 +387,7 @@ const RecentSales = () => {
                                             {tIdx === 0 && (
                                                 <>
                                                     <td rowSpan={rowSpan} style={{ verticalAlign: 'middle', borderRight: '1px solid var(--border-color)' }}>
-                                                        <span style={{ fontFamily: 'monospace', color: 'var(--accent-primary)', fontWeight: 600 }}>INV-{group.id}</span>
+                                                        <span style={{ fontFamily: 'monospace', color: 'var(--accent-primary)', fontWeight: 600 }}>#{group.id}</span>
                                                     </td>
                                                     <td rowSpan={rowSpan} style={{ verticalAlign: 'middle', borderRight: '1px solid var(--border-color)' }}>
                                                         <div className="font-medium">{group.buyerName}</div>
