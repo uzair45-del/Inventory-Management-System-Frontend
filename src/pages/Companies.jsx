@@ -462,6 +462,16 @@ const Companies = () => {
                                                                 return txnsArray.map((txn, tIdx) => {
                                                                     const rowStyle = tIdx === rowSpan - 1 ? { borderBottom: '3px solid var(--border-color)' } : {};
 
+                                                                    // Check for date change to add a separator border
+                                                                    let dateChanged = false;
+                                                                    if (tIdx > 0 && txn && txnsArray[tIdx - 1]) {
+                                                                        const prevDate = new Date(txnsArray[tIdx - 1].purchase_date).toLocaleDateString();
+                                                                        const currDate = new Date(txn.purchase_date).toLocaleDateString();
+                                                                        if (prevDate !== currDate) dateChanged = true;
+                                                                    }
+
+                                                                    const dateSeparatorStyle = dateChanged ? { borderTop: '2px solid rgba(56, 189, 248, 0.4)' } : {};
+
                                                                     return (
                                                                         <tr key={`${customer.id}-${txn ? txn.id : 'empty'}-${tIdx}`} className="animate-fade-in" style={rowStyle}>
                                                                             {tIdx === 0 && (
@@ -490,12 +500,12 @@ const Companies = () => {
                                                                             {/* Transaction specific columns */}
                                                                             {txn ? (
                                                                                 <>
-                                                                                    <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                                                                                    <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem', ...dateSeparatorStyle }}>
                                                                                         {txn.purchase_date ? new Date(txn.purchase_date).toLocaleDateString() : '-'}
                                                                                     </td>
-                                                                                    <td><span className="font-medium">{txn.products?.name || `Product ID: ${txn.product_id}`}</span></td>
-                                                                                    <td>Rs. {Number(txn.total_amount).toLocaleString()}</td>
-                                                                                    <td style={{ borderRight: '1px solid var(--border-color)' }}>{txn.quantity}</td>
+                                                                                    <td style={dateSeparatorStyle}><span className="font-medium">{txn.products?.name || `Product ID: ${txn.product_id}`}</span></td>
+                                                                                    <td style={dateSeparatorStyle}>Rs. {Number(txn.total_amount).toLocaleString()}</td>
+                                                                                    <td style={{ borderRight: '1px solid var(--border-color)', ...dateSeparatorStyle }}>{txn.quantity}</td>
                                                                                 </>
                                                                             ) : (
                                                                                 <td colSpan="4" className="text-secondary text-center italic" style={{ borderRight: '1px solid var(--border-color)' }}>No transactions</td>
