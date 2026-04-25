@@ -570,10 +570,11 @@ const Buyers = () => {
                                     <th>Address</th>
                                     <th>Product</th>
                                     <th>Qty</th>
-                                    <th>Total Amt</th>
+                                    <th>Price</th>
+                                    <th>Total Amount</th>
                                     <th>Paid Amt</th>
                                     <th>Method</th>
-                                    <th>Remaining (Credit)</th>
+                                    <th>Remaining</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -634,6 +635,11 @@ const Buyers = () => {
                                                                 <>
                                                                     <td rowSpan={rowSpan} style={{ verticalAlign: 'middle' }}>
                                                                         <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                                                                            Rs. {row.totalAmount.toLocaleString()}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td rowSpan={rowSpan} style={{ verticalAlign: 'middle' }}>
+                                                                        <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
                                                                             Rs. {row.paidAmount.toLocaleString()}
                                                                         </span>
                                                                     </td>
@@ -667,7 +673,7 @@ const Buyers = () => {
                                                                     </td>
                                                                 </>
                                                             ) : (
-                                                                <td colSpan="3" rowSpan={rowSpan} className="text-secondary text-center italic" style={{ verticalAlign: 'middle' }}>No transactions</td>
+                                                                <td colSpan="4" rowSpan={rowSpan} className="text-secondary text-center italic" style={{ verticalAlign: 'middle' }}>No transactions</td>
                                                             )}
 
                                                             <td rowSpan={rowSpan} style={{ verticalAlign: 'middle' }}>
