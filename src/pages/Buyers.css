@@ -66,8 +66,8 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--glass-border);
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
 }
 
 .custom-table th:last-child {
@@ -76,8 +76,8 @@
 
 .custom-table td {
     padding: 0.8rem 1rem;
-    border-bottom: 1px solid var(--glass-border);
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
     font-size: 0.85rem;
     vertical-align: middle;
 }
