@@ -615,7 +615,14 @@ const Companies = () => {
                                     min="1"
                                     max={payModal.companyData.total_remaining}
                                     value={payAmount}
-                                    onChange={(e) => setPayAmount(e.target.value)}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setPayAmount(val);
+                                        if (paymentMethod === 'Split') {
+                                            setCashAmount(val);
+                                            setOnlineAmount('0');
+                                        }
+                                    }}
                                     autoFocus
                                     required
                                 />
@@ -649,7 +656,17 @@ const Companies = () => {
                                             placeholder="Enter cash amount"
                                             min="0"
                                             value={cashAmount}
-                                            onChange={(e) => setCashAmount(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setCashAmount(val);
+                                                const numericVal = Number(val) || 0;
+                                                const total = Number(payAmount) || 0;
+                                                if (total > 0 && numericVal <= total) {
+                                                    setOnlineAmount(String(total - numericVal));
+                                                } else if (numericVal > total) {
+                                                    setOnlineAmount('0');
+                                                }
+                                            }}
                                         />
                                     </div>
                                     <div className="input-group">
@@ -660,7 +677,17 @@ const Companies = () => {
                                             placeholder="Enter online amount"
                                             min="0"
                                             value={onlineAmount}
-                                            onChange={(e) => setOnlineAmount(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setOnlineAmount(val);
+                                                const numericVal = Number(val) || 0;
+                                                const total = Number(payAmount) || 0;
+                                                if (total > 0 && numericVal <= total) {
+                                                    setCashAmount(String(total - numericVal));
+                                                } else if (numericVal > total) {
+                                                    setCashAmount('0');
+                                                }
+                                            }}
                                         />
                                     </div>
                                 </div>
