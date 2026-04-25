@@ -21,6 +21,20 @@ const Billing = () => {
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const [productSearchTerm, setProductSearchTerm] = useState('');
     const [showProductDropdown, setShowProductDropdown] = useState(false);
+    const [skipFocus, setSkipFocus] = useState(false);
+
+    const generateUniqueInvoiceId = () => {
+        const now = new Date();
+        const yy = String(now.getFullYear()).slice(-2);
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        return `${yy}${mm}${dd}-${hh}${min}${ss}`;
+    };
+
+    const [currentInvoiceId, setCurrentInvoiceId] = useState(generateUniqueInvoiceId);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -237,6 +251,7 @@ const Billing = () => {
         setPaidAmount('0');
         setCashAmount('');
         setOnlineAmount('');
+        setCurrentInvoiceId(generateUniqueInvoiceId());
         localStorage.removeItem('current_billing_draft');
         setTimeout(() => { skipAutosave.current = false; }, 500);
     };
@@ -320,6 +335,7 @@ const Billing = () => {
             const userPaid = billType === 'credit' ? Number(paidAmount || 0) : null;
             const lowStockAlerts = [];
             const billTimestamp = new Date().toISOString();
+            const generatedInvoiceId = currentInvoiceId;
 
             let currentCashPool = finalCashAmount;
             let currentOnlinePool = finalOnlineAmount;
@@ -366,7 +382,8 @@ const Billing = () => {
                     payment_method: paymentMethod,
                     cash_amount: thisCash,
                     online_amount: thisOnline,
-                    purchase_date: billTimestamp
+                    purchase_date: billTimestamp,
+                    invoice_id: generatedInvoiceId
                 };
 
                 const res = await axios.post('/api/sales', saleData, {
@@ -408,7 +425,7 @@ const Billing = () => {
             fetchProducts();
             fetchCustomers();
 
-            return generatedCartItems.length > 0 ? generatedCartItems[0].txn_id : null;
+            return generatedInvoiceId;
         } catch (err) {
             console.error('Error creating sale:', err);
             alertError('Error', err.response?.data?.error || 'Failed to save bill. Please try again.');
@@ -945,8 +962,8 @@ const Billing = () => {
                         </div>
                         <div className="meta-row">
                             <span>Invoice #:</span>
-                            <span id="receipt-invoice-id" style={{ color: cart.length > 0 && cart[0].txn_id ? 'inherit' : 'var(--text-muted)', fontSize: cart.length > 0 && cart[0].txn_id ? 'inherit' : '0.85em', fontStyle: cart.length > 0 && cart[0].txn_id ? 'normal' : 'italic' }}>
-                                {cart.length > 0 && cart[0].txn_id ? `#${cart[0].txn_id}` : '[Generated on Save]'}
+                            <span id="receipt-invoice-id" style={{ color: 'inherit', fontSize: 'inherit', fontStyle: 'normal' }}>
+                                #{cart.length > 0 && cart[0].invoice_id ? cart[0].invoice_id : cart.length > 0 && cart[0].txn_id ? cart[0].txn_id : currentInvoiceId}
                             </span>
                         </div>
                     </div>

@@ -125,7 +125,8 @@ const RecentSales = () => {
                 (sale.products?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (sale.buyers?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (sale.product_id && String(sale.product_id).toLowerCase().includes(searchQuery.toLowerCase())) ||
-                (sale.id && String(sale.id).toLowerCase().includes(searchQuery.toLowerCase()));
+                (sale.id && String(sale.id).toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (sale.invoice_id && String(sale.invoice_id).toLowerCase().includes(searchQuery.toLowerCase()));
             
             if (!(withinDate && matchesSearch)) return false;
 
@@ -155,7 +156,8 @@ const RecentSales = () => {
             
             if (!currentGroup) {
                 currentGroup = {
-                    id: sale.id, // Use smallest transaction ID as Invoice ID
+                    id: sale.invoice_id || sale.id, // Use explicit invoice_id if available
+                    invoice_id: sale.invoice_id,
                     buyerName,
                     phone,
                     salesman,
@@ -169,19 +171,23 @@ const RecentSales = () => {
                 const isSameBuyer = currentGroup.buyerName === buyerName;
                 const isSameSalesman = currentGroup.salesman === salesman;
                 
-                // Group if same buyer, same salesman, and within 5 seconds (5000 ms)
-                // This prevents separate bills created back-to-back from merging
-                if (isSameBuyer && isSameSalesman && timeDiff <= 5000) {
+                // Strictly group by invoice_id if it exists, otherwise fallback to heuristic
+                const shouldGroup = (sale.invoice_id && currentGroup.invoice_id)
+                    ? (sale.invoice_id === currentGroup.invoice_id)
+                    : (isSameBuyer && isSameSalesman && timeDiff <= 5000);
+                
+                if (shouldGroup) {
                     currentGroup.items.push(sale);
                     currentGroup.totalAmount += Number(sale.total_amount || 0);
-                    // Retain the smallest ID as the invoice ID
-                    if (sale.id < currentGroup.id) {
+                    // Retain the smallest ID as a fallback, but keep invoice_id
+                    if (!currentGroup.invoice_id && sale.id < currentGroup.id) {
                         currentGroup.id = sale.id;
                     }
                 } else {
                     groups.push(currentGroup);
                     currentGroup = {
-                        id: sale.id,
+                        id: sale.invoice_id || sale.id,
+                        invoice_id: sale.invoice_id,
                         buyerName,
                         phone,
                         salesman,
