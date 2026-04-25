@@ -141,8 +141,12 @@ const RecentSales = () => {
             return true;
         });
 
-        // 1. Sort strictly by date descending to group chronologically
-        filtered.sort((a, b) => new Date(b.purchase_date) - new Date(a.purchase_date));
+        // 1. Sort strictly by date descending to group chronologically (fallback to ID descending)
+        filtered.sort((a, b) => {
+            const diff = new Date(b.purchase_date).getTime() - new Date(a.purchase_date).getTime();
+            if (diff === 0) return b.id - a.id;
+            return diff;
+        });
 
         // 2. Group adjacent sales into Invoices
         const groups = [];
@@ -203,8 +207,14 @@ const RecentSales = () => {
 
         // 3. Apply user sort option to the GROUPS
         groups.sort((a, b) => {
-            if (sortOption === 'date_desc') return b.time - a.time;
-            if (sortOption === 'date_asc') return a.time - b.time;
+            if (sortOption === 'date_desc') {
+                if (b.time === a.time) return b.id - a.id;
+                return b.time - a.time;
+            }
+            if (sortOption === 'date_asc') {
+                if (a.time === b.time) return a.id - b.id;
+                return a.time - b.time;
+            }
             if (sortOption === 'amount_desc') return b.totalAmount - a.totalAmount;
             if (sortOption === 'amount_asc') return a.totalAmount - b.totalAmount;
             return 0;
