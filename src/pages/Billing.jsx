@@ -221,10 +221,24 @@ const Billing = () => {
         setCart(cart.filter(item => item.id !== id));
     };
 
+    const clearCartUI = () => {
+        skipAutosave.current = true;
+        setIsEditingGeneratedBill(false);
+        setCart([]);
+        setCustomerName('');
+        setCompanyName('');
+        setBuyerPhone('');
+        setPaidAmount('0');
+        setCashAmount('');
+        setOnlineAmount('');
+        localStorage.removeItem('current_billing_draft');
+        setTimeout(() => { skipAutosave.current = false; }, 500);
+    };
+
     const handleSaveBill = async () => {
         if (cart.length === 0) {
             alertError('Error', "No items in the cart to create a bill.");
-            return;
+            return null;
         }
 
         // ===== QUOTATION BILL =====
@@ -383,24 +397,14 @@ const Billing = () => {
             localStorage.setItem('recent_billing_data', JSON.stringify(savedBillObj));
             setRecentGeneratedBill(savedBillObj);
 
-            // Clean up UI
-            skipAutosave.current = true;
-            setIsEditingGeneratedBill(false);
-            setCart([]);
-            setCustomerName('');
-            setCompanyName('');
-            setBuyerPhone('');
-            setPaidAmount('0');
-            setCashAmount('');
-            setOnlineAmount('');
-            localStorage.removeItem('current_billing_draft');
-            setTimeout(() => { skipAutosave.current = false; }, 500);
-            
             fetchProducts();
             fetchCustomers();
+
+            return generatedCartItems.length > 0 ? generatedCartItems[0].txn_id : null;
         } catch (err) {
             console.error('Error creating sale:', err);
             alertError('Error', err.response?.data?.error || 'Failed to save bill. Please try again.');
+            return null;
         } finally {
             setLoading(false);
         }
@@ -933,7 +937,7 @@ const Billing = () => {
                         </div>
                         <div className="meta-row">
                             <span>Invoice #:</span>
-                            <span>INV-{Math.floor(100000 + Math.random() * 900000)}</span>
+                            <span id="receipt-invoice-id">#{cart.length > 0 && cart[0].txn_id ? cart[0].txn_id : Math.floor(100000 + Math.random() * 900000)}</span>
                         </div>
                     </div>
 
@@ -1027,9 +1031,16 @@ const Billing = () => {
                         <button
                             className="btn-primary flex-1 bg-accent"
                             onClick={async () => {
-                                await handleDownloadPdf();
-                                if (billType !== 'quotation') {
-                                    handleSaveBill();
+                                if (billType === 'quotation') {
+                                    await handleDownloadPdf();
+                                } else {
+                                    const firstTxnId = await handleSaveBill();
+                                    if (firstTxnId) {
+                                        const invSpan = document.getElementById('receipt-invoice-id');
+                                        if (invSpan) invSpan.innerText = `#${firstTxnId}`;
+                                        await handleDownloadPdf();
+                                        clearCartUI();
+                                    }
                                 }
                             }}
                             disabled={!canProceed || loading}
