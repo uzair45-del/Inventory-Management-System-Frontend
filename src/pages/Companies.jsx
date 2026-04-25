@@ -68,6 +68,7 @@ const Companies = () => {
             (buyer.buyer_transactions || []).forEach(txn => {
                 cMap[company].txns.push({
                     ...txn,
+                    buyer_id: buyer.id,
                     buyerName: buyer.name,
                     buyerPhone: buyer.phone
                 });
@@ -311,7 +312,7 @@ const Companies = () => {
                                 const key = txn.buyer_id || txn.buyerName || 'unknown';
                                 if (!customerMap[key]) {
                                     customerMap[key] = {
-                                        id: txn.buyer_id || key,
+                                        id: txn.buyer_id ? txn.buyer_id : 'Guest',
                                         name: txn.buyerName || '—',
                                         phone: txn.buyerPhone || '—',
                                         txns: []
@@ -440,7 +441,7 @@ const Companies = () => {
                                                     <table className="data-table">
                                                         <thead>
                                                             <tr>
-                                                                <th>Customer ID</th>
+                                                                <th>ID</th>
                                                                 <th>Name</th>
                                                                 <th>Phone</th>
                                                                 <th>Date</th>
@@ -466,7 +467,7 @@ const Companies = () => {
                                                                             {tIdx === 0 && (
                                                                                 <>
                                                                                     <td rowSpan={rowSpan} style={{ verticalAlign: 'middle', borderRight: '1px solid var(--border-color)' }}>
-                                                                                        <span className="font-bold text-accent">#{customer.id || 'N/A'}</span>
+                                                                                        <span className="font-bold text-accent">{customer.id}</span>
                                                                                     </td>
                                                                                     <td rowSpan={rowSpan} style={{ verticalAlign: 'middle' }}>
                                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
