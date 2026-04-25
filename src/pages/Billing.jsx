@@ -937,7 +937,9 @@ const Billing = () => {
                         </div>
                         <div className="meta-row">
                             <span>Invoice #:</span>
-                            <span id="receipt-invoice-id">#{cart.length > 0 && cart[0].txn_id ? cart[0].txn_id : Math.floor(100000 + Math.random() * 900000)}</span>
+                            <span id="receipt-invoice-id" style={{ color: cart.length > 0 && cart[0].txn_id ? 'inherit' : 'var(--text-muted)', fontSize: cart.length > 0 && cart[0].txn_id ? 'inherit' : '0.85em', fontStyle: cart.length > 0 && cart[0].txn_id ? 'normal' : 'italic' }}>
+                                {cart.length > 0 && cart[0].txn_id ? `#${cart[0].txn_id}` : '[Generated on Save]'}
+                            </span>
                         </div>
                     </div>
 
