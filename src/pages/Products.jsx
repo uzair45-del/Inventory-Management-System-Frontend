@@ -235,7 +235,41 @@ const Products = () => {
 
     const handleFormChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => {
+            const next = { ...prev, [name]: value };
+
+            // Auto-calculate for Restock split
+            if (name === 'restock_cash_amount' && prev.restock_payment_method === 'Split') {
+                const totalPaid = parseFloat(prev.restock_paid_amount || 0);
+                const cash = parseFloat(value || 0);
+                if (cash <= totalPaid) {
+                    next.restock_online_amount = (totalPaid - cash).toString();
+                }
+            } else if (name === 'restock_online_amount' && prev.restock_payment_method === 'Split') {
+                const totalPaid = parseFloat(prev.restock_paid_amount || 0);
+                const online = parseFloat(value || 0);
+                if (online <= totalPaid) {
+                    next.restock_cash_amount = (totalPaid - online).toString();
+                }
+            }
+
+            // Auto-calculate for Add Product split
+            if (name === 'cash_amount' && prev.payment_method === 'Split') {
+                const totalPaid = parseFloat(prev.paid_amount || 0);
+                const cash = parseFloat(value || 0);
+                if (cash <= totalPaid) {
+                    next.online_amount = (totalPaid - cash).toString();
+                }
+            } else if (name === 'online_amount' && prev.payment_method === 'Split') {
+                const totalPaid = parseFloat(prev.paid_amount || 0);
+                const online = parseFloat(value || 0);
+                if (online <= totalPaid) {
+                    next.cash_amount = (totalPaid - online).toString();
+                }
+            }
+
+            return next;
+        });
     };
 
     const totalToPaySupplier = useMemo(() => {
@@ -1268,11 +1302,23 @@ const Products = () => {
                                                         <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                                                             <div className="input-group" style={{ flex: 1, marginBottom: 0 }}>
                                                                 <label>Cash (Rs)</label>
-                                                                <input type="number" className="input-field" min="0" value={updateCashAmount} onChange={e => setUpdateCashAmount(e.target.value)} placeholder="0" />
+                                                                <input type="number" className="input-field" min="0" value={updateCashAmount} onChange={e => {
+                                                                    const val = e.target.value;
+                                                                    setUpdateCashAmount(val);
+                                                                    const total = parseFloat(addPaymentAmount || 0);
+                                                                    const cash = parseFloat(val || 0);
+                                                                    if (cash <= total) setUpdateOnlineAmount((total - cash).toString());
+                                                                }} placeholder="0" />
                                                             </div>
                                                             <div className="input-group" style={{ flex: 1, marginBottom: 0 }}>
                                                                 <label>Online (Rs)</label>
-                                                                <input type="number" className="input-field" min="0" value={updateOnlineAmount} onChange={e => setUpdateOnlineAmount(e.target.value)} placeholder="0" />
+                                                                <input type="number" className="input-field" min="0" value={updateOnlineAmount} onChange={e => {
+                                                                    const val = e.target.value;
+                                                                    setUpdateOnlineAmount(val);
+                                                                    const total = parseFloat(addPaymentAmount || 0);
+                                                                    const online = parseFloat(val || 0);
+                                                                    if (online <= total) setUpdateCashAmount((total - online).toString());
+                                                                }} placeholder="0" />
                                                             </div>
                                                         </div>
                                                     )}
