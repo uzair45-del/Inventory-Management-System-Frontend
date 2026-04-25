@@ -40,7 +40,7 @@ const Billing = () => {
 
     const receiptRef = useRef();
 
-    const handleDownloadPdf = async () => {
+    const handleDownloadPdf = async (preOpenedWindow = null) => {
         if (cart.length === 0) {
             alertError('Error', "No items in the cart to print.");
             return;
@@ -70,8 +70,13 @@ const Billing = () => {
         const actionsContainer = element.querySelector('.bill-actions-container');
         if (actionsContainer) actionsContainer.style.display = 'none';
 
-        const newWindow = window.open('', '_blank');
-        if (newWindow) newWindow.document.write('<body><h2 style="font-family:sans-serif; text-align:center; margin-top: 20vh;">Generating PDF Receipt...</h2></body>');
+        const recentBillContainer = element.querySelector('.recent-bill-container');
+        if (recentBillContainer) recentBillContainer.style.display = 'none';
+
+        const newWindow = preOpenedWindow || window.open('', '_blank');
+        if (newWindow) {
+            newWindow.document.write('<body><h2 style="font-family:sans-serif; text-align:center; margin-top: 20vh;">Generating PDF Receipt...</h2></body>');
+        }
 
         await html2pdf().set(opt).from(element).toPdf().get('pdf').then((pdf) => {
             const pdfUrl = pdf.output('bloburl');
@@ -86,6 +91,7 @@ const Billing = () => {
         element.style.background = '';
         element.style.color = '';
         if (actionsContainer) actionsContainer.style.display = 'flex';
+        if (recentBillContainer) recentBillContainer.style.display = 'flex';
     };
 
     const formatProductId = (id) => {
@@ -1036,12 +1042,19 @@ const Billing = () => {
                                 if (billType === 'quotation') {
                                     await handleDownloadPdf();
                                 } else {
+                                    // Open window synchronously to avoid popup blocker
+                                    const newWindow = window.open('', '_blank');
+                                    if (newWindow) newWindow.document.write('<body><h2 style="font-family:sans-serif; text-align:center; margin-top: 20vh;">Saving Bill & Generating Receipt...</h2></body>');
+
                                     const firstTxnId = await handleSaveBill();
                                     if (firstTxnId) {
                                         const invSpan = document.getElementById('receipt-invoice-id');
                                         if (invSpan) invSpan.innerText = `#${firstTxnId}`;
-                                        await handleDownloadPdf();
+                                        await handleDownloadPdf(newWindow);
                                         clearCartUI();
+                                    } else {
+                                        // If save failed, close the loading window
+                                        if (newWindow) newWindow.close();
                                     }
                                 }
                             }}
@@ -1055,7 +1068,7 @@ const Billing = () => {
 
                     {/* Recent Bill compact inline row */}
                     {recentGeneratedBill && !isEditingGeneratedBill && (
-                        <div style={{
+                        <div className="recent-bill-container" style={{
                             marginTop: '12px',
                             display: 'flex',
                             alignItems: 'center',
