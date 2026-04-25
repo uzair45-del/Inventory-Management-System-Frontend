@@ -59,7 +59,7 @@ const Companies = () => {
     // Build companyMap from BOTH buyers (credit) AND direct buyer_transactions (original bills)
     const { companyList, grandTotals, companyMap } = useMemo(() => {
         const cMap = {};
-        
+
         buyers.forEach(buyer => {
             const company = buyer.company_name?.trim();
             if (!company) return;
@@ -92,16 +92,16 @@ const Companies = () => {
 
         const list = Object.entries(cMap)
             .filter(([name, data]) => {
-                if(!name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-                if(filterOption === 'all') return true;
-                
+                if (!name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+                if (filterOption === 'all') return true;
+
                 const totals = data.txns.reduce((acc, txn) => {
                     acc.total += Number(txn.total_amount || 0);
                     acc.paid += Number(txn.paid_amount || 0);
                     return acc;
                 }, { total: 0, paid: 0 });
                 const remaining = totals.total - totals.paid;
-                
+
                 if (filterOption === 'pending_udhar') return remaining > 0;
                 if (filterOption === 'cleared') return remaining <= 0;
                 return true;
@@ -112,21 +112,21 @@ const Companies = () => {
                     acc.paid += Number(txn.paid_amount || 0);
                     return acc;
                 }, { total: 0, paid: 0 });
-                
+
                 const bTotals = bData.txns.reduce((acc, txn) => {
                     acc.total += Number(txn.total_amount || 0);
                     acc.paid += Number(txn.paid_amount || 0);
                     return acc;
                 }, { total: 0, paid: 0 });
-                
+
                 const aRemaining = aTotals.total - aTotals.paid;
                 const bRemaining = bTotals.total - bTotals.paid;
-                
+
                 if (sortOption === 'name_asc') return a.localeCompare(b);
                 if (sortOption === 'name_desc') return b.localeCompare(a);
                 if (sortOption === 'udhar_desc') return bRemaining - aRemaining;
                 if (sortOption === 'udhar_asc') return aRemaining - bRemaining;
-                
+
                 if (aRemaining > 0 && bRemaining <= 0) return -1;
                 if (aRemaining <= 0 && bRemaining > 0) return 1;
                 if (aRemaining > 0 && bRemaining > 0) return bRemaining - aRemaining;
@@ -168,20 +168,20 @@ const Companies = () => {
 
     const handlePay = async () => {
         const amt = Number(payAmount);
-        if (!amt || amt <= 0) { 
-            notifyError('Payment amount must be greater than 0'); 
-            return; 
+        if (!amt || amt <= 0) {
+            notifyError('Payment amount must be greater than 0');
+            return;
         }
-        
-        if (amt > payModal.companyData.total_remaining) { 
-            notifyError(`Payment amount cannot exceed outstanding amount: Rs. ${payModal.companyData.total_remaining.toLocaleString()}`); 
-            return; 
+
+        if (amt > payModal.companyData.total_remaining) {
+            notifyError(`Payment amount cannot exceed outstanding amount: Rs. ${payModal.companyData.total_remaining.toLocaleString()}`);
+            return;
         }
-        
+
         const confirmMessage = `Receive payment of Rs. ${amt} from ${payModal.companyName}? This will be distributed across all ${payModal.companyData.buyers.length} customers in this company.`;
-        
+
         if (!window.confirm(confirmMessage)) return;
-        
+
         if (paymentMethod === 'Split') {
             const splitCash = Number(cashAmount || 0);
             const splitOnline = Number(onlineAmount || 0);
@@ -194,7 +194,7 @@ const Companies = () => {
                 return;
             }
         }
-        
+
         try {
             setPaying(true);
             const token = localStorage.getItem('inventory_token');
@@ -208,7 +208,7 @@ const Companies = () => {
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            
+
             notifySuccess(`Company payment of Rs. ${amt} received and distributed across ${payModal.companyData.buyers.length} customers!`);
             setPayModal(null);
             fetchBuyers();
@@ -267,10 +267,10 @@ const Companies = () => {
                         />
                     </div>
                     <div className="filter-sort-wrapper" style={{ display: 'flex', gap: '10px' }}>
-                        <CustomDropdown 
-                            className="minimal-select" 
+                        <CustomDropdown
+                            className="minimal-select"
                             style={{ minWidth: '150px' }}
-                            value={filterOption} 
+                            value={filterOption}
                             onChange={(e) => setFilterOption(e.target.value)}
                             options={[
                                 { value: "all", label: "All Companies" },
@@ -278,10 +278,10 @@ const Companies = () => {
                                 { value: "cleared", label: "Cleared" }
                             ]}
                         />
-                        <CustomDropdown 
-                            className="minimal-select" 
+                        <CustomDropdown
+                            className="minimal-select"
                             style={{ minWidth: '150px' }}
-                            value={sortOption} 
+                            value={sortOption}
                             onChange={(e) => setSortOption(e.target.value)}
                             options={[
                                 { value: "name_asc", label: "Name (A-Z)" },
@@ -305,7 +305,7 @@ const Companies = () => {
                             const { txns } = companyData;
                             const totals = getCompanyTotals(txns);
                             const isOpen = selectedCompany === companyName;
-                            
+
                             // Group txns by customer
                             const customerMap = {};
                             txns.forEach(txn => {
@@ -332,7 +332,7 @@ const Companies = () => {
                                     totalAmount += Number(t.total_amount || 0);
                                     paidAmount += Number(t.paid_amount || 0);
                                     if (t.payment_method) methods.add(t.payment_method);
-                                    
+
                                     if (t.payment_method === 'Split') {
                                         totalCash += Number(t.cash_amount || 0);
                                         totalOnline += Number(t.online_amount || 0);
@@ -354,7 +354,7 @@ const Companies = () => {
                                 } else if (methods.has('Company Payment')) {
                                     mergedMethod = 'Company Payment';
                                 }
-                                
+
                                 return {
                                     ...customer,
                                     totalAmount,
@@ -399,9 +399,9 @@ const Companies = () => {
                                                 <button
                                                     className="btn-primary"
                                                     style={{ padding: '4px 12px', fontSize: '0.8rem', background: '#22c55e', borderColor: '#22c55e' }}
-                                                    onClick={() => openPayModal(companyName, { 
-                                                        buyers: companyData.buyers || [], 
-                                                        total_remaining: totals.remaining 
+                                                    onClick={() => openPayModal(companyName, {
+                                                        buyers: companyData.buyers || [],
+                                                        total_remaining: totals.remaining
                                                     })}
                                                     title="Receive Company Payment"
                                                 >
@@ -441,7 +441,7 @@ const Companies = () => {
                                                     <table className="data-table">
                                                         <thead>
                                                             <tr>
-                                                                <th>ID</th>
+                                                                <th>Id</th>
                                                                 <th>Name</th>
                                                                 <th>Phone</th>
                                                                 <th>Date</th>
@@ -479,8 +479,8 @@ const Companies = () => {
                                                                                     </td>
                                                                                     <td rowSpan={rowSpan} onClick={(e) => togglePhone(customer.id, e)} style={{ cursor: 'pointer', verticalAlign: 'middle', borderRight: '1px solid var(--border-color)' }}>
                                                                                         <span className="text-secondary" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                                            {customer.phone 
-                                                                                                ? (showPhones[customer.id] ? customer.phone : customer.phone.replace(/./g, '*')) 
+                                                                                            {customer.phone
+                                                                                                ? (showPhones[customer.id] ? customer.phone : customer.phone.replace(/./g, '*'))
                                                                                                 : '-'}
                                                                                         </span>
                                                                                     </td>
@@ -517,7 +517,7 @@ const Companies = () => {
                                                                                             </td>
                                                                                             <td rowSpan={rowSpan} style={{ verticalAlign: 'middle' }}>
                                                                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-                                                                                                    <span style={{ 
+                                                                                                    <span style={{
                                                                                                         fontSize: '0.8em', padding: '4px 10px', borderRadius: '6px', fontWeight: 600, width: 'fit-content',
                                                                                                         background: customer.mergedMethod === 'Online' ? 'rgba(56,189,248,0.15)' : (customer.mergedMethod === 'Split' ? 'rgba(234,179,8,0.15)' : (customer.mergedMethod === 'Company Payment' ? 'rgba(168,85,247,0.15)' : 'rgba(34,197,94,0.15)')),
                                                                                                         color: customer.mergedMethod === 'Online' ? '#38bdf8' : (customer.mergedMethod === 'Split' ? '#facc15' : (customer.mergedMethod === 'Company Payment' ? '#a855f7' : '#4ade80'))
@@ -595,7 +595,7 @@ const Companies = () => {
                                     💡 Payment will be distributed proportionally across all customers in this company
                                 </p>
                             </div>
-                            
+
                             <div className="input-group">
                                 <label>Payment Amount (Rs) *</label>
                                 <input
