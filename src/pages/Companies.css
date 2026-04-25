@@ -58,6 +58,10 @@
     border-right: none;
 }
 
+.data-table {
+    min-width: 1000px;
+}
+
 /* =============================================
    RESPONSIVE — Companies Page
    ============================================= */
