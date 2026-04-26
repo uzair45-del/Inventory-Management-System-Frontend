@@ -23,29 +23,21 @@ const Billing = () => {
     const [showProductDropdown, setShowProductDropdown] = useState(false);
     const [skipFocus, setSkipFocus] = useState(false);
 
-    const getNextInvoiceIdPreview = () => {
-        const now = new Date();
-        const yy = String(now.getFullYear()).slice(-2);
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const datePrefix = `${dd}${mm}${yy}`;
-
-        const storedDate = localStorage.getItem('invoice_date_prefix');
-        let counter = 1;
-
-        if (storedDate === datePrefix) {
-            const storedCounter = localStorage.getItem('invoice_daily_counter');
-            if (storedCounter) {
-                counter = parseInt(storedCounter, 10) + 1;
-            }
-        }
-
-        return `${datePrefix}-${String(counter).padStart(3, '0')}`;
-    };
-
-    const [currentInvoiceId, setCurrentInvoiceId] = useState(getNextInvoiceIdPreview);
+    const [currentInvoiceId, setCurrentInvoiceId] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    const fetchNextInvoiceId = async () => {
+        try {
+            const token = localStorage.getItem('inventory_token');
+            const res = await axios.get('/api/billing/next-invoice-id', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setCurrentInvoiceId(res.data.nextInvoiceId);
+        } catch (err) {
+            console.error('Failed to fetch next invoice ID', err);
+        }
+    };
 
     // Credit-specific fields
     const [buyerPhone, setBuyerPhone] = useState('');
@@ -128,6 +120,13 @@ const Billing = () => {
     useEffect(() => {
         fetchProducts();
         fetchCustomers();
+        fetchNextInvoiceId();
+
+        // Polling setup for cross-platform real-time sync of invoice ID
+        // Uses virtually 0 bandwidth since the backend caches it in-memory
+        const intervalId = setInterval(() => {
+            fetchNextInvoiceId();
+        }, 5000);
 
         // Load recent generated bill for the side panel
         const savedRecent = localStorage.getItem('recent_billing_data');
@@ -160,6 +159,10 @@ const Billing = () => {
                 skipAutosave.current = false;
             }
         }
+
+        return () => {
+            clearInterval(intervalId);
+        };
     }, []);
 
     // Continuously auto-save the active draft (debounced slightly by React batching)
@@ -260,7 +263,7 @@ const Billing = () => {
         setPaidAmount('0');
         setCashAmount('');
         setOnlineAmount('');
-        setCurrentInvoiceId(getNextInvoiceIdPreview());
+        fetchNextInvoiceId();
         localStorage.removeItem('current_billing_draft');
         setTimeout(() => { skipAutosave.current = false; }, 500);
     };
@@ -394,15 +397,6 @@ const Billing = () => {
                 ...item,
                 txn_id: res.data.items?.[i]?.txn_id
             }));
-
-            // Increment daily counter
-            if (generatedInvoiceId?.includes('-')) {
-                const parts = generatedInvoiceId.split('-');
-                if (parts.length === 2) {
-                    localStorage.setItem('invoice_date_prefix', parts[0]);
-                    localStorage.setItem('invoice_daily_counter', parseInt(parts[1], 10).toString());
-                }
-            }
 
             if (billType === 'credit') {
                 const remaining = total_value - Number(paidAmount || 0);
