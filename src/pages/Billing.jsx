@@ -362,6 +362,7 @@ const Billing = () => {
 
                 return {
                     product_id: item.id,
+                    product_name: item.name, // Added for error tracing
                     quantity: item.quantity,
                     price: item.price,
                     cart_unit: item.cart_unit,
