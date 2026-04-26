@@ -217,11 +217,17 @@ const RecentSales = () => {
         // 3. Apply user sort option to the GROUPS
         groups.sort((a, b) => {
             if (sortOption === 'date_desc') {
-                if (b.time === a.time) return b.id - a.id;
+                if (b.time === a.time) {
+                    if (typeof b.id === 'string' && typeof a.id === 'string') return b.id.localeCompare(a.id);
+                    return b.id - a.id;
+                }
                 return b.time - a.time;
             }
             if (sortOption === 'date_asc') {
-                if (a.time === b.time) return a.id - b.id;
+                if (a.time === b.time) {
+                    if (typeof a.id === 'string' && typeof b.id === 'string') return a.id.localeCompare(b.id);
+                    return a.id - b.id;
+                }
                 return a.time - b.time;
             }
             if (sortOption === 'amount_desc') return b.totalAmount - a.totalAmount;
