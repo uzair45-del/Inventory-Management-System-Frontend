@@ -308,20 +308,9 @@ const Billing = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('inventory_token');
-            let buyerId = null;
-
-            // ===== CREDIT: Create buyer first =====
-            if (billType === 'credit') {
-                const buyerRes = await axios.post('/api/buyers', {
-                    name: customerName.trim(),
-                    phone: buyerPhone.trim(),
-                    company_name: companyName.trim() || null
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                buyerId = buyerRes.data.data?.[0]?.id;
-                if (!buyerId) throw new Error('Failed to create customer');
-            }
+            const generatedInvoiceId = currentInvoiceId;
+            const billTimestamp = new Date().toISOString();
+            const total_value = total;
 
             // If editing an already generated bill, erase the old transactions cleanly first
             if (isEditingGeneratedBill && recentGeneratedBill?.cart) {
@@ -338,114 +327,75 @@ const Billing = () => {
                 }
             }
 
-            // ===== Process each cart item as a sale =====
-            const generatedCartItems = [...cart];
-            const actualBillType = billType === 'credit' ? 'CREDIT' : 'REAL';
+            // ── Pre-compute per-item paid / split amounts (same logic as before) ──
             const userPaid = billType === 'credit' ? Number(paidAmount || 0) : null;
-            const lowStockAlerts = [];
-            const billTimestamp = new Date().toISOString();
-            const generatedInvoiceId = currentInvoiceId;
-
             let currentCashPool = finalCashAmount;
             let currentOnlinePool = finalOnlineAmount;
 
-            // Track created sale IDs for rollback if partial failure
-            const createdSaleIds = [];
+            const computedCart = cart.map((item, i) => {
+                const itemTotal = item.price * item.quantity;
+                const isLastItem = i === cart.length - 1;
 
-            try {
-                for (let i = 0; i < cart.length; i++) {
-                    const item = cart[i];
-                    const itemTotal = item.price * item.quantity;
-                    const isLastItem = i === cart.length - 1;
-
-                    let itemPaidAmount;
-                    if (billType === 'credit') {
-                        const ratio = total > 0 ? (itemTotal / total) : 0;
-                        itemPaidAmount = isLastItem
-                            ? (userPaid - cart.slice(0, i).reduce((s, it) => s + Math.round((it.price * it.quantity / total) * userPaid), 0))
-                            : Math.round(ratio * userPaid);
-                    } else {
-                        itemPaidAmount = itemTotal;
-                    }
-
-                    let thisCash = 0;
-                    let thisOnline = 0;
-                    if (paymentMethod === 'Split') {
-                        const ratio = targetPaidAmount > 0 ? (itemPaidAmount / targetPaidAmount) : 0;
-                        thisCash = isLastItem ? currentCashPool : Math.round(ratio * finalCashAmount);
-                        thisOnline = isLastItem ? currentOnlinePool : Math.round(ratio * finalOnlineAmount);
-                        currentCashPool -= thisCash;
-                        currentOnlinePool -= thisOnline;
-                    } else if (paymentMethod === 'Cash') {
-                        thisCash = itemPaidAmount;
-                    } else if (paymentMethod === 'Online') {
-                        thisOnline = itemPaidAmount;
-                    }
-
-                    const saleData = {
-                        product_id: item.id,
-                        quantity: item.quantity,
-                        total_amount: itemTotal,
-                        bill_type: actualBillType,
-                        buyer_id: buyerId,
-                        buyer_name: customerName || 'Cash Walk-in Customer',
-                        company_name: companyName || null,
-                        paid_amount: itemPaidAmount,
-                        quantity_unit: item.cart_unit,
-                        payment_method: paymentMethod,
-                        cash_amount: thisCash,
-                        online_amount: thisOnline,
-                        purchase_date: billTimestamp,
-                        invoice_id: generatedInvoiceId
-                    };
-
-                    const res = await axios.post('/api/sales', saleData, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-
-                    const newSaleId = res.data.data?.id;
-                    if (newSaleId) createdSaleIds.push(newSaleId);
-
-                    // Attach ID to item for future recovery/editing
-                    generatedCartItems[i].txn_id = newSaleId;
-
-                    const newRemaining = item.remaining_quantity - item.quantity;
-                    const threshold = item.low_stock_threshold !== undefined && item.low_stock_threshold !== null ? item.low_stock_threshold : 10;
-                    if (newRemaining <= threshold) {
-                        lowStockAlerts.push(`${item.name} (${newRemaining} left)`);
-                    }
+                let itemPaidAmount;
+                if (billType === 'credit') {
+                    const ratio = total_value > 0 ? (itemTotal / total_value) : 0;
+                    itemPaidAmount = isLastItem
+                        ? (userPaid - cart.slice(0, i).reduce((s, it) => s + Math.round((it.price * it.quantity / total_value) * userPaid), 0))
+                        : Math.round(ratio * userPaid);
+                } else {
+                    itemPaidAmount = itemTotal;
                 }
-            } catch (saleErr) {
-                // ── ROLLBACK: undo any sales already created ──
-                for (const saleId of createdSaleIds) {
-                    try {
-                        await axios.delete(`/api/sales/${saleId}`, { headers: { Authorization: `Bearer ${token}` } });
-                    } catch (_) { /* best-effort */ }
+
+                let thisCash = 0;
+                let thisOnline = 0;
+                if (paymentMethod === 'Split') {
+                    const ratio = targetPaidAmount > 0 ? (itemPaidAmount / targetPaidAmount) : 0;
+                    thisCash = isLastItem ? currentCashPool : Math.round(ratio * finalCashAmount);
+                    thisOnline = isLastItem ? currentOnlinePool : Math.round(ratio * finalOnlineAmount);
+                    currentCashPool -= thisCash;
+                    currentOnlinePool -= thisOnline;
+                } else if (paymentMethod === 'Cash') {
+                    thisCash = itemPaidAmount;
+                } else if (paymentMethod === 'Online') {
+                    thisOnline = itemPaidAmount;
                 }
-                // ── ROLLBACK: delete the orphaned buyer (prevents "No transactions" ghost) ──
-                if (buyerId) {
-                    try {
-                        await axios.delete(`/api/buyers/${buyerId}`, { headers: { Authorization: `Bearer ${token}` } });
-                    } catch (_) { /* best-effort */ }
-                }
-                throw saleErr; // re-throw to outer catch
-            }
 
-            if (billType === 'credit') {
-                const remaining = total - Number(paidAmount || 0);
-                alertSuccess('Success', `Credit Bill saved! Stock deducted. Remaining balance: Rs. ${remaining}`);
-            } else {
-                alertSuccess('Success', 'Original Bill saved! Stock has been deducted.');
-            }
+                return {
+                    product_id: item.id,
+                    quantity: item.quantity,
+                    price: item.price,
+                    cart_unit: item.cart_unit,
+                    itemPaidAmount,
+                    thisCash,
+                    thisOnline
+                };
+            });
 
-            if (lowStockAlerts.length > 0) {
-                setTimeout(() => {
-                    alertError('Error', `⚠️ Low Stock Alert:\n${lowStockAlerts.join('\n')}`);
-                }, 500);
-            }
+            // ── Single atomic request — nothing saved unless ALL items succeed ──
+            const res = await axios.post('/api/billing', {
+                billType,
+                customerName: customerName || null,
+                buyerPhone: buyerPhone || null,
+                companyName: companyName || null,
+                paymentMethod,
+                paidAmount: billType === 'credit' ? Number(paidAmount || 0) : total_value,
+                cashAmount: finalCashAmount,
+                onlineAmount: finalOnlineAmount,
+                invoiceId: generatedInvoiceId,
+                billTimestamp,
+                cart: computedCart
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
 
-            // Increment the daily counter in local storage since the bill is now officially saved
-            if (generatedInvoiceId && generatedInvoiceId.includes('-')) {
+            // Attach txn IDs to cart items for receipt recovery
+            const generatedCartItems = cart.map((item, i) => ({
+                ...item,
+                txn_id: res.data.items?.[i]?.txn_id
+            }));
+
+            // Increment daily counter
+            if (generatedInvoiceId?.includes('-')) {
                 const parts = generatedInvoiceId.split('-');
                 if (parts.length === 2) {
                     localStorage.setItem('invoice_date_prefix', parts[0]);
@@ -453,11 +403,31 @@ const Billing = () => {
                 }
             }
 
-            // Save the successfully captured final bill to Local Storage
+            if (billType === 'credit') {
+                const remaining = total_value - Number(paidAmount || 0);
+                alertSuccess('Success', `Credit Bill saved! Stock deducted. Remaining balance: Rs. ${remaining}`);
+            } else {
+                alertSuccess('Success', 'Original Bill saved! Stock has been deducted.');
+            }
+
+            // Low stock alerts
+            const lowStockAlerts = cart
+                .map(item => {
+                    const newRemaining = item.remaining_quantity - item.quantity;
+                    const threshold = item.low_stock_threshold ?? 10;
+                    return newRemaining <= threshold ? `${item.name} (${newRemaining} left)` : null;
+                })
+                .filter(Boolean);
+
+            if (lowStockAlerts.length > 0) {
+                setTimeout(() => alertError('Error', `⚠️ Low Stock Alert:\n${lowStockAlerts.join('\n')}`), 500);
+            }
+
+            // Save recent bill for receipt recovery
             const savedBillObj = {
-                cart: generatedCartItems, // with txn_ids!
+                cart: generatedCartItems,
                 customerName, companyName, buyerPhone, billType, paidAmount, paymentMethod, cashAmount, onlineAmount,
-                isEditingGeneratedBill: false // Reset flag inside cache
+                isEditingGeneratedBill: false
             };
             localStorage.setItem('recent_billing_data', JSON.stringify(savedBillObj));
             setRecentGeneratedBill(savedBillObj);
@@ -467,13 +437,14 @@ const Billing = () => {
 
             return generatedInvoiceId;
         } catch (err) {
-            console.error('Error creating sale:', err);
+            console.error('Error creating bill:', err);
             alertError('Error', err.response?.data?.error || 'Failed to save bill. Please try again.');
             return null;
         } finally {
             setLoading(false);
         }
     };
+
 
 
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
