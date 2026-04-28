@@ -5,6 +5,7 @@ import html2pdf from 'html2pdf.js';
 import CustomDropdown from '../components/CustomDropdown';
 import { alertSuccess, alertError } from '../utils/notifications';
 import { useShopSettings } from '../utils/useShopSettings';
+import { fuzzyMatch } from '../utils/fuzzySearch';
 import './Billing.css';
 
 // ─── FUZZY SEARCH LOGIC ───
