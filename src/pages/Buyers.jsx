@@ -199,7 +199,32 @@ const Buyers = () => {
 
     const handleFormChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => {
+            const newData = { ...prev, [name]: value };
+
+            if (newData.payment_method === 'Split') {
+                const totalPaid =
+                    Number(newData.add_payment) > 0
+                        ? Math.round(Number(newData.add_payment))
+                        : Number(newData.paid_amount) > 0
+                            ? Math.round(Number(newData.paid_amount))
+                            : 0;
+
+                if (totalPaid > 0) {
+                    if (name === 'cash_amount') {
+                        const cashVal = Math.min(Math.max(Math.round(Number(value)) || 0, 0), totalPaid);
+                        newData.cash_amount = cashVal;
+                        newData.online_amount = totalPaid - cashVal;
+                    } else if (name === 'online_amount') {
+                        const onlineVal = Math.min(Math.max(Math.round(Number(value)) || 0, 0), totalPaid);
+                        newData.online_amount = onlineVal;
+                        newData.cash_amount = totalPaid - onlineVal;
+                    }
+                }
+            }
+
+            return newData;
+        });
     };
 
     const handleFormSubmit = async (e) => {
